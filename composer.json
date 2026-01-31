@@ -10,7 +10,8 @@
         }
     ],
     "require": {
-        "shopware/core": "~6.6.0 || ~6.7.0"
+        "shopware/core": "~6.7.0",
+        "fakerphp/faker": "^1.20"
     },
     "autoload": {
         "psr-4": {
@@ -29,8 +30,8 @@
             "en-GB": "Abandoned Cart"
         },
         "description": {
-            "de-DE": "Speichert abgebrochene Warenkörbe und stellt sie bei Kundenanmeldung wieder her",
-            "en-GB": "Stores abandoned carts and restores them on customer login"
+            "de-DE": "Speichert abgebrochene Warenkörbe, stellt sie bei Kundenanmeldung wieder her und ermöglicht automatisierte E-Mail-Kampagnen mit Gutscheincodes zur Rückgewinnung",
+            "en-GB": "Stores abandoned carts, restores them on customer login, and enables automated email campaigns with personalized voucher codes to recover lost sales and boost conversions"
         },
         "manufacturerLink": {
             "de-DE": "https://friendsofshopware.com",

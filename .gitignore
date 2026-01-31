@@ -1,1 +1,2 @@
 .phpunit.cache/
+src/Resources/app/administration/.tmp/

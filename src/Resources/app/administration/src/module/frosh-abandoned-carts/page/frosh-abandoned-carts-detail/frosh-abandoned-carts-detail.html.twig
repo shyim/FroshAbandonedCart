@@ -2,7 +2,9 @@
 <sw-page class="frosh-abandoned-carts-detail">
     {% block frosh_abandoned_carts_detail_smart_bar_header %}
     <template #smart-bar-header>
-        <h2>{{ $tc('frosh-abandoned-carts.detail.title') }}</h2>
+        <h2>
+            {{ $tc('frosh-abandoned-carts.detail.title') }}
+        </h2>
     </template>
     {% endblock %}
 
@@ -21,10 +23,19 @@
     <template #content>
         <sw-card-view v-if="abandonedCart">
             {% block frosh_abandoned_carts_detail_card_info %}
-            <sw-card position-identifier="frosh-abandoned-carts-detail-info" :title="$tc('frosh-abandoned-carts.detail.cardTitleInfo')" :isLoading="isLoading">
-                <sw-container columns="1fr 1fr" gap="16px">
+            <sw-card
+                position-identifier="frosh-abandoned-carts-detail-info"
+                :title="$tc('frosh-abandoned-carts.detail.cardTitleInfo')"
+                :isLoading="isLoading"
+            >
+                <sw-container
+                    columns="1fr 1fr"
+                    gap="16px"
+                >
                     <sw-description-list>
-                        <dt>{{ $tc('frosh-abandoned-carts.detail.labelCustomer') }}</dt>
+                        <dt>
+                            {{ $tc('frosh-abandoned-carts.detail.labelCustomer') }}
+                        </dt>
                         <dd>
                             <router-link
                                 v-if="abandonedCart.customer"
@@ -34,24 +45,37 @@
                             </router-link>
                             <template v-else>-</template>
                         </dd>
-
-                        <dt>{{ $tc('frosh-abandoned-carts.detail.labelSalesChannel') }}</dt>
-                        <dd>{{ abandonedCart.salesChannel ? abandonedCart.salesChannel.name : '-' }}</dd>
+                        <dt>
+                            {{ $tc('frosh-abandoned-carts.detail.labelSalesChannel') }}
+                        </dt>
+                        <dd>
+                            {{ abandonedCart.salesChannel ? abandonedCart.salesChannel.name : '-' }}
+                        </dd>
                     </sw-description-list>
-
                     <sw-description-list>
-                        <dt>{{ $tc('frosh-abandoned-carts.detail.labelTotalPrice') }}</dt>
-                        <dd>{{ formatPrice(abandonedCart.totalPrice) }}</dd>
-
-                        <dt>{{ $tc('frosh-abandoned-carts.detail.labelCreatedAt') }}</dt>
-                        <dd><sw-time-ago :date="abandonedCart.createdAt" /></dd>
+                        <dt>
+                            {{ $tc('frosh-abandoned-carts.detail.labelTotalPrice') }}
+                        </dt>
+                        <dd>
+                            {{ formatPrice(abandonedCart.totalPrice) }}
+                        </dd>
+                        <dt>
+                            {{ $tc('frosh-abandoned-carts.detail.labelCreatedAt') }}
+                        </dt>
+                        <dd>
+                            <sw-time-ago :date="abandonedCart.createdAt"/>
+                        </dd>
                     </sw-description-list>
                 </sw-container>
             </sw-card>
             {% endblock %}
 
             {% block frosh_abandoned_carts_detail_card_line_items %}
-            <sw-card position-identifier="frosh-abandoned-carts-detail-line-items" :title="$tc('frosh-abandoned-carts.detail.cardTitleLineItems')" :isLoading="isLoading">
+            <sw-card
+                position-identifier="frosh-abandoned-carts-detail-line-items"
+                :title="$tc('frosh-abandoned-carts.detail.cardTitleLineItems')"
+                :isLoading="isLoading"
+            >
                 <sw-data-grid
                     v-if="abandonedCart.lineItems && abandonedCart.lineItems.length > 0"
                     :dataSource="abandonedCart.lineItems"
@@ -85,7 +109,6 @@
                     </template>
                     {% endblock %}
                 </sw-data-grid>
-
                 <sw-empty-state
                     v-else
                     :title="$tc('frosh-abandoned-carts.detail.unknownProduct')"
@@ -93,8 +116,7 @@
             </sw-card>
             {% endblock %}
         </sw-card-view>
-
-        <sw-loader v-else />
+        <sw-loader v-else/>
     </template>
     {% endblock %}
 </sw-page>

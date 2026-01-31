@@ -16,7 +16,6 @@
         >
             {{ $tc('global.default.cancel') }}
         </mt-button>
-
         <mt-button
             variant="secondary"
             :isLoading="isTestLoading"
@@ -24,7 +23,6 @@
         >
             {{ $tc('frosh-abandoned-carts.automations.detail.testButton') }}
         </mt-button>
-
         <mt-button
             variant="primary"
             :isLoading="isLoading"
@@ -44,14 +42,16 @@
                 :title="$tc('frosh-abandoned-carts.automations.detail.generalCard')"
                 :isLoading="isLoading"
             >
-                <sw-container columns="1fr 1fr" gap="16px">
+                <sw-container
+                    columns="1fr 1fr"
+                    gap="16px"
+                >
                     <mt-text-field
                         v-model="automation.name"
                         :label="$tc('frosh-abandoned-carts.automations.detail.nameLabel')"
                         :placeholder="$tc('frosh-abandoned-carts.automations.detail.namePlaceholder')"
                         required
                     />
-
                     <mt-number-field
                         v-model="automation.priority"
                         :label="$tc('frosh-abandoned-carts.automations.detail.priorityLabel')"
@@ -59,13 +59,14 @@
                         :min="1"
                     />
                 </sw-container>
-
-                <sw-container columns="1fr 1fr" gap="16px">
+                <sw-container
+                    columns="1fr 1fr"
+                    gap="16px"
+                >
                     <mt-switch
                         v-model="automation.active"
                         :label="$tc('frosh-abandoned-carts.automations.detail.activeLabel')"
                     />
-
                     <sw-entity-single-select
                         v-model:value="automation.salesChannelId"
                         entity="sales_channel"
@@ -89,56 +90,61 @@
                         :key="index"
                         class="frosh-abandoned-carts-automation-detail__condition-row"
                     >
-                        <sw-container columns="200px 1fr auto" gap="16px">
+                        <sw-container
+                            columns="200px 1fr auto"
+                            gap="16px"
+                        >
                             <mt-select
                                 v-model="condition.type"
                                 :label="$tc('frosh-abandoned-carts.automations.detail.conditionType')"
                                 :options="conditionTypeOptions"
                             />
-
-                            <div class="frosh-abandoned-carts-automation-detail__condition-config">
-                                <sw-container columns="repeat(auto-fit, minmax(120px, 1fr))" gap="8px">
+                            <div
+                                class="frosh-abandoned-carts-automation-detail__condition-config"
+                            >
+                                <sw-container
+                                    columns="repeat(auto-fit, minmax(120px, 1fr))"
+                                    gap="8px"
+                                >
                                     <mt-select
                                         v-if="needsValueInput(condition.type)"
                                         v-model="condition.operator"
                                         :label="$tc('frosh-abandoned-carts.automations.detail.operator')"
                                         :options="operatorOptions"
                                     />
-
                                     <mt-number-field
                                         v-if="needsValueInput(condition.type)"
                                         v-model="condition.value"
                                         :label="$tc('frosh-abandoned-carts.automations.detail.value')"
                                     />
-
                                     <mt-select
                                         v-if="needsUnitInput(condition.type)"
                                         v-model="condition.unit"
                                         :label="$tc('frosh-abandoned-carts.automations.detail.unit')"
                                         :options="unitOptions"
                                     />
-
                                     <sw-entity-single-select
                                         v-if="needsTagInput(condition.type)"
                                         v-model:value="condition.tagId"
                                         entity="tag"
                                         :label="$tc('frosh-abandoned-carts.automations.detail.tagId')"
                                     />
-
                                     <mt-switch
                                         v-model="condition.negate"
                                         :label="$tc('frosh-abandoned-carts.automations.detail.negate')"
                                     />
                                 </sw-container>
                             </div>
-
                             <mt-button
                                 square
                                 size="small"
                                 variant="secondary"
                                 @click="removeCondition(index)"
                             >
-                                <mt-icon name="regular-trash" size="16px" />
+                                <mt-icon
+                                    name="regular-trash"
+                                    size="16px"
+                                />
                             </mt-button>
                         </sw-container>
                     </div>
@@ -170,15 +176,22 @@
                         :key="index"
                         class="frosh-abandoned-carts-automation-detail__action-row"
                     >
-                        <sw-container columns="200px 1fr auto" gap="16px">
+                        <sw-container
+                            columns="200px 1fr auto"
+                            gap="16px"
+                        >
                             <mt-select
                                 v-model="action.type"
                                 :label="$tc('frosh-abandoned-carts.automations.detail.actionType')"
                                 :options="actionTypeOptions"
                             />
-
-                            <div class="frosh-abandoned-carts-automation-detail__action-config">
-                                <sw-container columns="repeat(auto-fit, minmax(200px, 1fr))" gap="8px">
+                            <div
+                                class="frosh-abandoned-carts-automation-detail__action-config"
+                            >
+                                <sw-container
+                                    columns="repeat(auto-fit, minmax(200px, 1fr))"
+                                    gap="8px"
+                                >
                                     <sw-entity-single-select
                                         v-if="needsMailTemplateInput(action.type)"
                                         v-model:value="action.mailTemplateId"
@@ -186,33 +199,28 @@
                                         label-property="description"
                                         :label="$tc('frosh-abandoned-carts.automations.detail.mailTemplateId')"
                                     />
-
                                     <sw-entity-single-select
                                         v-if="needsPromotionInput(action.type)"
                                         v-model:value="action.promotionId"
                                         entity="promotion"
                                         :label="$tc('frosh-abandoned-carts.automations.detail.promotionId')"
                                     />
-
                                     <mt-text-field
                                         v-if="needsPromotionInput(action.type)"
                                         v-model="action.codePattern"
                                         :label="$tc('frosh-abandoned-carts.automations.detail.codePattern')"
                                     />
-
                                     <sw-entity-single-select
                                         v-if="needsTagActionInput(action.type)"
                                         v-model:value="action.tagId"
                                         entity="tag"
                                         :label="$tc('frosh-abandoned-carts.automations.detail.tagId')"
                                     />
-
                                     <mt-text-field
                                         v-if="needsCustomFieldInput(action.type)"
                                         v-model="action.customFieldName"
                                         :label="$tc('frosh-abandoned-carts.automations.detail.customFieldName')"
                                     />
-
                                     <mt-text-field
                                         v-if="needsCustomFieldInput(action.type)"
                                         v-model="action.value"
@@ -220,14 +228,16 @@
                                     />
                                 </sw-container>
                             </div>
-
                             <mt-button
                                 square
                                 size="small"
                                 variant="secondary"
                                 @click="removeAction(index)"
                             >
-                                <mt-icon name="regular-trash" size="16px" />
+                                <mt-icon
+                                    name="regular-trash"
+                                    size="16px"
+                                />
                             </mt-button>
                         </sw-container>
                     </div>
@@ -252,48 +262,81 @@
                 :title="$tc('frosh-abandoned-carts.automations.detail.testModalTitle')"
                 @modal-close="closeTestModal"
             >
-                <div v-if="testResults" class="frosh-abandoned-carts-automation-detail__test-results">
-                    <div class="frosh-abandoned-carts-automation-detail__test-summary">
-                        <strong>{{ $tc('frosh-abandoned-carts.automations.detail.testMatchingCount', { count: testResults.matchingCount, total: testResults.totalCount }) }}</strong>
+                <div
+                    v-if="testResults"
+                    class="frosh-abandoned-carts-automation-detail__test-results"
+                >
+                    <div
+                        class="frosh-abandoned-carts-automation-detail__test-summary"
+                    >
+                        <strong>
+                            {{ $tc('frosh-abandoned-carts.automations.detail.testMatchingCount', { count: testResults.matchingCount, total: testResults.totalCount }) }}
+                        </strong>
                     </div>
-
-                    <div v-if="testResults.matchingCarts.length > 0" class="frosh-abandoned-carts-automation-detail__test-matching">
-                        <h4>{{ $tc('frosh-abandoned-carts.automations.detail.testMatchingCarts') }}</h4>
-                        <table class="frosh-abandoned-carts-automation-detail__test-table">
+                    <div
+                        v-if="testResults.matchingCarts.length > 0"
+                        class="frosh-abandoned-carts-automation-detail__test-matching"
+                    >
+                        <h4>
+                            {{ $tc('frosh-abandoned-carts.automations.detail.testMatchingCarts') }}
+                        </h4>
+                        <table
+                            class="frosh-abandoned-carts-automation-detail__test-table"
+                        >
                             <thead>
                                 <tr>
-                                    <th>{{ $tc('frosh-abandoned-carts.automations.detail.testCustomer') }}</th>
-                                    <th>{{ $tc('frosh-abandoned-carts.automations.detail.testValue') }}</th>
-                                    <th>{{ $tc('frosh-abandoned-carts.automations.detail.testCreatedAt') }}</th>
-                                    <th>{{ $tc('frosh-abandoned-carts.automations.detail.testAutomationRuns') }}</th>
+                                    <th>
+                                        {{ $tc('frosh-abandoned-carts.automations.detail.testCustomer') }}
+                                    </th>
+                                    <th>
+                                        {{ $tc('frosh-abandoned-carts.automations.detail.testValue') }}
+                                    </th>
+                                    <th>
+                                        {{ $tc('frosh-abandoned-carts.automations.detail.testCreatedAt') }}
+                                    </th>
+                                    <th>
+                                        {{ $tc('frosh-abandoned-carts.automations.detail.testAutomationRuns') }}
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="cart in testResults.matchingCarts" :key="cart.id">
-                                    <td>{{ cart.customerName }}<br><small>{{ cart.customerEmail }}</small></td>
-                                    <td>{{ formatPrice(cart.totalPrice, cart.currencyIsoCode) }}</td>
+                                <tr
+                                    v-for="cart in testResults.matchingCarts"
+                                    :key="cart.id"
+                                >
+                                    <td>
+                                        {{ cart.customerName }}
+                                        <br/>
+                                        <small>{{ cart.customerEmail }}</small>
+                                    </td>
+                                    <td>
+                                        {{ formatPrice(cart.totalPrice, cart.currencyIsoCode) }}
+                                    </td>
                                     <td>{{ cart.createdAt }}</td>
                                     <td>{{ cart.automationCount }}</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-
-                    <div v-else class="frosh-abandoned-carts-automation-detail__test-no-match">
+                    <div
+                        v-else
+                        class="frosh-abandoned-carts-automation-detail__test-no-match"
+                    >
                         {{ $tc('frosh-abandoned-carts.automations.detail.testNoMatches') }}
                     </div>
                 </div>
-
                 <template #modal-footer>
-                    <mt-button variant="primary" @click="closeTestModal">
+                    <mt-button
+                        variant="primary"
+                        @click="closeTestModal"
+                    >
                         {{ $tc('global.default.close') }}
                     </mt-button>
                 </template>
             </sw-modal>
             {% endblock %}
         </sw-card-view>
-
-        <sw-loader v-else />
+        <sw-loader v-else/>
     </template>
     {% endblock %}
 </sw-page>

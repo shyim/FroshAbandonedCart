@@ -1,7 +1,11 @@
 const ApiService = Shopware.Classes.ApiService;
 
 export default class FroshAbandonedCartAutomationApiService extends ApiService {
-    constructor(httpClient, loginService, apiEndpoint = 'frosh-abandoned-cart') {
+    constructor(
+        httpClient,
+        loginService,
+        apiEndpoint = 'frosh-abandoned-cart'
+    ) {
         super(httpClient, loginService, apiEndpoint);
         this.name = 'froshAbandonedCartAutomationApiService';
     }
@@ -18,7 +22,7 @@ export default class FroshAbandonedCartAutomationApiService extends ApiService {
                 },
                 {
                     headers,
-                },
+                }
             )
             .then((response) => {
                 return ApiService.handleResponse(response);

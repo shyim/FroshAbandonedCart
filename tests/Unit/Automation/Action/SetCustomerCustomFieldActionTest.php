@@ -15,6 +15,7 @@ use Shopware\Core\Checkout\Customer\CustomerCollection;
 use Shopware\Core\Checkout\Customer\CustomerEntity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\EntitySearchResult;
+use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\Uuid\Uuid;
 
 #[CoversClass(SetCustomerCustomFieldAction::class)]
@@ -45,7 +46,7 @@ class SetCustomerCustomFieldActionTest extends TestCase
     public function testExecuteWithMissingCustomFieldName(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $this->logger->expects(static::once())
             ->method('warning')
@@ -63,7 +64,7 @@ class SetCustomerCustomFieldActionTest extends TestCase
     public function testExecuteWithNullCustomFieldName(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $this->logger->expects(static::once())
             ->method('warning')
@@ -75,7 +76,7 @@ class SetCustomerCustomFieldActionTest extends TestCase
     public function testExecuteWithEmptyCustomFieldName(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $this->logger->expects(static::once())
             ->method('warning')
@@ -87,7 +88,7 @@ class SetCustomerCustomFieldActionTest extends TestCase
     public function testExecuteWithCustomerNotFound(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $searchResult = $this->createMock(EntitySearchResult::class);
         $collection = new CustomerCollection();
@@ -121,7 +122,7 @@ class SetCustomerCustomFieldActionTest extends TestCase
     public function testExecuteSuccessfullyWithNewCustomField(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $customer = $this->createCustomer($cart->getCustomerId(), customFields: null);
         $searchResult = $this->createMock(EntitySearchResult::class);
@@ -169,7 +170,7 @@ class SetCustomerCustomFieldActionTest extends TestCase
     public function testExecuteSuccessfullyMergesWithExistingCustomFields(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $existingCustomFields = [
             'existing_field' => 'existing_value',
@@ -209,7 +210,7 @@ class SetCustomerCustomFieldActionTest extends TestCase
     public function testExecuteSuccessfullyOverwritesExistingCustomField(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $existingCustomFields = [
             'my_custom_field' => 'old_value',
@@ -243,7 +244,7 @@ class SetCustomerCustomFieldActionTest extends TestCase
     public function testExecuteWithNullValue(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $customer = $this->createCustomer($cart->getCustomerId(), customFields: ['my_field' => 'old']);
         $searchResult = $this->createMock(EntitySearchResult::class);
@@ -274,7 +275,7 @@ class SetCustomerCustomFieldActionTest extends TestCase
     public function testExecuteWithDifferentValueTypes(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $customer = $this->createCustomer($cart->getCustomerId());
         $searchResult = $this->createMock(EntitySearchResult::class);
@@ -308,7 +309,7 @@ class SetCustomerCustomFieldActionTest extends TestCase
     public function testExecuteLogsErrorOnUpdateFailure(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $customer = $this->createCustomer($cart->getCustomerId());
         $searchResult = $this->createMock(EntitySearchResult::class);
@@ -347,7 +348,7 @@ class SetCustomerCustomFieldActionTest extends TestCase
     public function testExecuteLogsErrorOnSearchFailure(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $exception = new \Exception('Search failed');
         $this->customerRepository->expects(static::once())

@@ -19,6 +19,7 @@ use Shopware\Core\Content\MailTemplate\MailTemplateEntity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\EntitySearchResult;
 use Shopware\Core\Framework\Uuid\Uuid;
+use Shopware\Core\Framework\Context;
 use Shopware\Core\System\SalesChannel\SalesChannelEntity;
 
 #[CoversClass(SendEmailAction::class)]
@@ -53,7 +54,7 @@ class SendEmailActionTest extends TestCase
     public function testExecuteWithMissingMailTemplateId(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $this->logger->expects(static::once())
             ->method('warning')
@@ -68,7 +69,7 @@ class SendEmailActionTest extends TestCase
     public function testExecuteWithNullMailTemplateId(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $this->logger->expects(static::once())
             ->method('warning')
@@ -83,7 +84,7 @@ class SendEmailActionTest extends TestCase
     public function testExecuteWithMailTemplateNotFound(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $mailTemplateId = Uuid::randomHex();
 
         $searchResult = $this->createMock(EntitySearchResult::class);
@@ -107,7 +108,7 @@ class SendEmailActionTest extends TestCase
     public function testExecuteWithMissingCustomer(): void
     {
         $cart = $this->createAbandonedCart(withCustomer: false);
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $mailTemplateId = Uuid::randomHex();
 
         $mailTemplate = $this->createMailTemplate($mailTemplateId);
@@ -132,7 +133,7 @@ class SendEmailActionTest extends TestCase
     public function testExecuteSuccessfully(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $context->setVoucherCode('VOUCHER123');
         $mailTemplateId = Uuid::randomHex();
 
@@ -174,7 +175,7 @@ class SendEmailActionTest extends TestCase
     public function testExecuteWithReplyTo(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $mailTemplateId = Uuid::randomHex();
 
         $mailTemplate = $this->createMailTemplate($mailTemplateId);
@@ -207,7 +208,7 @@ class SendEmailActionTest extends TestCase
     public function testExecuteWithEmptyReplyTo(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $mailTemplateId = Uuid::randomHex();
 
         $mailTemplate = $this->createMailTemplate($mailTemplateId);
@@ -240,7 +241,7 @@ class SendEmailActionTest extends TestCase
     public function testExecuteLogsErrorOnMailSendFailure(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $mailTemplateId = Uuid::randomHex();
 
         $mailTemplate = $this->createMailTemplate($mailTemplateId);

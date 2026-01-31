@@ -158,6 +158,26 @@ Use code {{ voucherCode }} for a special discount!
 ./vendor/bin/phpunit -c phpunit.xml
 ```
 
+### Code Formatting
+
+Format PHP and JavaScript files according to Shopware coding standards:
+
+```bash
+shopware-cli extension format custom/plugins/FroshAbandonedCart
+```
+
+### Validation
+
+Validate the extension for store compatibility:
+
+```bash
+# Basic validation
+shopware-cli extension validate custom/plugins/FroshAbandonedCart
+
+# Full validation including all checks
+shopware-cli extension validate --full custom/plugins/FroshAbandonedCart
+```
+
 ### Project Structure
 
 ```

@@ -5,9 +5,6 @@ import './page/frosh-abandoned-carts-automation-list';
 import './page/frosh-abandoned-carts-automation-detail';
 import './acl';
 
-import deDE from './snippet/de-DE.json';
-import enGB from './snippet/en-GB.json';
-
 Shopware.Module.register('frosh-abandoned-carts', {
     type: 'plugin',
     name: 'frosh-abandoned-carts',
@@ -15,11 +12,6 @@ Shopware.Module.register('frosh-abandoned-carts', {
     description: 'frosh-abandoned-carts.general.description',
     color: '#ff6b35',
     icon: 'regular-shopping-cart',
-
-    snippets: {
-        'de-DE': deDE,
-        'en-GB': enGB,
-    },
 
     routes: {
         list: {

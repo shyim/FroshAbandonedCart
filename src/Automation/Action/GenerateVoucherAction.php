@@ -9,7 +9,6 @@ use Psr\Log\LoggerInterface;
 use Shopware\Core\Checkout\Promotion\Aggregate\PromotionIndividualCode\PromotionIndividualCodeCollection;
 use Shopware\Core\Checkout\Promotion\PromotionCollection;
 use Shopware\Core\Checkout\Promotion\PromotionEntity;
-use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\Util\Random;
@@ -49,7 +48,7 @@ class GenerateVoucherAction implements ActionInterface
             return;
         }
 
-        $promotion = $this->getPromotion($promotionId);
+        $promotion = $this->getPromotion($promotionId, $context->getContext());
         if ($promotion === null) {
             $this->logger->warning('GenerateVoucherAction: Promotion not found', ['promotionId' => $promotionId]);
 
@@ -71,7 +70,7 @@ class GenerateVoucherAction implements ActionInterface
                     'promotionId' => $promotionId,
                     'code' => $code,
                 ],
-            ], Context::createDefaultContext());
+            ], $context->getContext());
 
             $context->setVoucherCode($code);
 
@@ -89,12 +88,12 @@ class GenerateVoucherAction implements ActionInterface
         }
     }
 
-    private function getPromotion(string $id): ?PromotionEntity
+    private function getPromotion(string $id, \Shopware\Core\Framework\Context $context): ?PromotionEntity
     {
         $criteria = new Criteria([$id]);
         $criteria->setLimit(1);
 
-        return $this->promotionRepository->search($criteria, Context::createDefaultContext())->getEntities()->first();
+        return $this->promotionRepository->search($criteria, $context)->getEntities()->first();
     }
 
     private function generateCode(string $pattern): string
@@ -114,11 +113,11 @@ class GenerateVoucherAction implements ActionInterface
                     $i += 2;
                 } else {
                     $result .= $pattern[$i];
-                    $i++;
+                    ++$i;
                 }
             } else {
                 $result .= $pattern[$i];
-                $i++;
+                ++$i;
             }
         }
 

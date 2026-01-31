@@ -12,6 +12,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
+use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\Uuid\Uuid;
 
 #[CoversClass(RemoveCustomerTagAction::class)]
@@ -42,7 +43,7 @@ class RemoveCustomerTagActionTest extends TestCase
     public function testExecuteWithMissingTagId(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $this->logger->expects(static::once())
             ->method('warning')
@@ -57,7 +58,7 @@ class RemoveCustomerTagActionTest extends TestCase
     public function testExecuteWithNullTagId(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $this->logger->expects(static::once())
             ->method('warning')
@@ -72,7 +73,7 @@ class RemoveCustomerTagActionTest extends TestCase
     public function testExecuteSuccessfully(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $tagId = Uuid::randomHex();
 
         $this->customerTagRepository->expects(static::once())
@@ -107,7 +108,7 @@ class RemoveCustomerTagActionTest extends TestCase
     public function testExecuteLogsErrorOnDeleteFailure(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $tagId = Uuid::randomHex();
 
         $exception = new \Exception('Database connection lost');
@@ -135,7 +136,7 @@ class RemoveCustomerTagActionTest extends TestCase
     public function testExecuteWithTagNotAssignedToCustomer(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $tagId = Uuid::randomHex();
 
         // Even if tag is not assigned, the delete should still be called
@@ -162,7 +163,7 @@ class RemoveCustomerTagActionTest extends TestCase
     {
         $customerId = Uuid::randomHex();
         $cart = $this->createAbandonedCart($customerId);
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $tagId = Uuid::randomHex();
 
         $this->customerTagRepository->expects(static::once())

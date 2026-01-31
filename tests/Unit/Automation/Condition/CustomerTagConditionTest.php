@@ -11,6 +11,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Shopware\Core\Checkout\Customer\CustomerCollection;
 use Shopware\Core\Checkout\Customer\CustomerEntity;
+use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\EntitySearchResult;
 use Shopware\Core\Framework\Uuid\Uuid;
@@ -20,6 +21,13 @@ use Shopware\Core\System\Tag\TagEntity;
 #[CoversClass(CustomerTagCondition::class)]
 class CustomerTagConditionTest extends TestCase
 {
+    private Context $context;
+
+    protected function setUp(): void
+    {
+        $this->context = Context::createDefaultContext();
+    }
+
     public function testGetType(): void
     {
         $customerRepository = $this->createMock(EntityRepository::class);
@@ -35,7 +43,7 @@ class CustomerTagConditionTest extends TestCase
 
         $cart = $this->createMock(AbandonedCartEntity::class);
 
-        $result = $condition->evaluate($cart, ['tagId' => null]);
+        $result = $condition->evaluate($cart, ['tagId' => null], $this->context);
 
         static::assertFalse($result);
     }
@@ -47,7 +55,7 @@ class CustomerTagConditionTest extends TestCase
 
         $cart = $this->createMock(AbandonedCartEntity::class);
 
-        $result = $condition->evaluate($cart, []);
+        $result = $condition->evaluate($cart, [], $this->context);
 
         static::assertFalse($result);
     }
@@ -70,11 +78,11 @@ class CustomerTagConditionTest extends TestCase
         $cart->method('getCustomerId')->willReturn($customerId);
 
         // When negate is false and customer not found, return false
-        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => false]);
+        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => false], $this->context);
         static::assertFalse($result);
 
         // When negate is true and customer not found, return true
-        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => true]);
+        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => true], $this->context);
         static::assertTrue($result);
     }
 
@@ -99,11 +107,11 @@ class CustomerTagConditionTest extends TestCase
         $cart->method('getCustomerId')->willReturn($customerId);
 
         // When negate is false and tags is null, return false
-        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => false]);
+        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => false], $this->context);
         static::assertFalse($result);
 
         // When negate is true and tags is null, return true
-        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => true]);
+        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => true], $this->context);
         static::assertTrue($result);
     }
 
@@ -142,7 +150,7 @@ class CustomerTagConditionTest extends TestCase
             'negate' => $negate,
         ];
 
-        $result = $condition->evaluate($cart, $config);
+        $result = $condition->evaluate($cart, $config, $this->context);
 
         static::assertSame($expected, $result);
     }
@@ -201,7 +209,7 @@ class CustomerTagConditionTest extends TestCase
         $cart->method('getCustomerId')->willReturn($customerId);
 
         // Default negate is false
-        $result = $condition->evaluate($cart, ['tagId' => $tagId]);
+        $result = $condition->evaluate($cart, ['tagId' => $tagId], $this->context);
 
         static::assertTrue($result);
     }
@@ -239,15 +247,15 @@ class CustomerTagConditionTest extends TestCase
         $cart->method('getCustomerId')->willReturn($customerId);
 
         // Check for tag that customer has
-        $result = $condition->evaluate($cart, ['tagId' => $tagId1, 'negate' => false]);
+        $result = $condition->evaluate($cart, ['tagId' => $tagId1, 'negate' => false], $this->context);
         static::assertTrue($result);
 
         // Check for another tag that customer has
-        $result = $condition->evaluate($cart, ['tagId' => $tagId2, 'negate' => false]);
+        $result = $condition->evaluate($cart, ['tagId' => $tagId2, 'negate' => false], $this->context);
         static::assertTrue($result);
 
         // Check for tag that customer does not have
-        $result = $condition->evaluate($cart, ['tagId' => $tagId3, 'negate' => false]);
+        $result = $condition->evaluate($cart, ['tagId' => $tagId3, 'negate' => false], $this->context);
         static::assertFalse($result);
     }
 
@@ -278,11 +286,11 @@ class CustomerTagConditionTest extends TestCase
         $cart->method('getCustomerId')->willReturn($customerId);
 
         // Test with negate as truthy string value (will be cast to bool)
-        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => '1']);
+        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => '1'], $this->context);
         static::assertFalse($result);
 
         // Test with negate as falsy string value
-        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => '0']);
+        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => '0'], $this->context);
         static::assertTrue($result);
     }
 }

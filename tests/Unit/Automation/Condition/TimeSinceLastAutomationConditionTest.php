@@ -9,15 +9,19 @@ use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Shopware\Core\Framework\Context;
 
 #[CoversClass(TimeSinceLastAutomationCondition::class)]
 class TimeSinceLastAutomationConditionTest extends TestCase
 {
     private TimeSinceLastAutomationCondition $condition;
 
+    private Context $context;
+
     protected function setUp(): void
     {
         $this->condition = new TimeSinceLastAutomationCondition();
+        $this->context = Context::createDefaultContext();
     }
 
     public function testGetType(): void
@@ -30,7 +34,7 @@ class TimeSinceLastAutomationConditionTest extends TestCase
         $cart = $this->createMock(AbandonedCartEntity::class);
         $cart->method('getLastAutomationAt')->willReturn(null);
 
-        $result = $this->condition->evaluate($cart, ['operator' => '>=', 'value' => 24, 'unit' => 'hours']);
+        $result = $this->condition->evaluate($cart, ['operator' => '>=', 'value' => 24, 'unit' => 'hours'], $this->context);
 
         static::assertTrue($result);
     }
@@ -53,7 +57,7 @@ class TimeSinceLastAutomationConditionTest extends TestCase
             'unit' => 'hours',
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertSame($expected, $result);
     }
@@ -226,7 +230,7 @@ class TimeSinceLastAutomationConditionTest extends TestCase
             'unit' => $unit,
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertSame($expected, $result);
     }
@@ -305,7 +309,7 @@ class TimeSinceLastAutomationConditionTest extends TestCase
         $cart = $this->createMock(AbandonedCartEntity::class);
         $cart->method('getLastAutomationAt')->willReturn($lastAutomationAt);
 
-        $result = $this->condition->evaluate($cart, []);
+        $result = $this->condition->evaluate($cart, [], $this->context);
 
         static::assertTrue($result);
     }
@@ -323,7 +327,7 @@ class TimeSinceLastAutomationConditionTest extends TestCase
             'unit' => 'hours',
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertFalse($result);
     }
@@ -342,7 +346,7 @@ class TimeSinceLastAutomationConditionTest extends TestCase
             'unit' => 'unknown_unit',
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertTrue($result);
     }
@@ -359,7 +363,7 @@ class TimeSinceLastAutomationConditionTest extends TestCase
             'unit' => 'days',
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertTrue($result);
     }
@@ -379,7 +383,7 @@ class TimeSinceLastAutomationConditionTest extends TestCase
             'unit' => 'hours',
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertFalse($result);
     }
@@ -399,7 +403,7 @@ class TimeSinceLastAutomationConditionTest extends TestCase
             'unit' => 'hours',
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertTrue($result);
     }

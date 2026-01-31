@@ -466,7 +466,7 @@ class AutomationProcessorTest extends TestCase
                 return $this->type;
             }
 
-            public function evaluate(AbandonedCartEntity $cart, array $config): bool
+            public function evaluate(AbandonedCartEntity $cart, array $config, Context $context): bool
             {
                 return $this->returnValue;
             }

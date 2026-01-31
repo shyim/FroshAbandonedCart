@@ -43,7 +43,9 @@
             >
                 {% block frosh_abandoned_carts_list_column_customer %}
                 <template #column-customer.email="{ item }">
-                    <router-link :to="{ name: 'frosh.abandoned.carts.detail', params: { id: item.id } }">
+                    <router-link
+                        :to="{ name: 'frosh.abandoned.carts.detail', params: { id: item.id } }"
+                    >
                         {{ getCustomerName(item) }}
                     </router-link>
                 </template>
@@ -63,7 +65,7 @@
 
                 {% block frosh_abandoned_carts_list_column_created_at %}
                 <template #column-createdAt="{ item }">
-                    <sw-time-ago :date="item.createdAt" />
+                    <sw-time-ago :date="item.createdAt"/>
                 </template>
                 {% endblock %}
             </sw-entity-listing>

@@ -15,6 +15,7 @@ use Shopware\Core\Checkout\Promotion\PromotionCollection;
 use Shopware\Core\Checkout\Promotion\PromotionEntity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\EntitySearchResult;
+use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\Uuid\Uuid;
 
 #[CoversClass(GenerateVoucherAction::class)]
@@ -49,7 +50,7 @@ class GenerateVoucherActionTest extends TestCase
     public function testExecuteWithMissingPromotionId(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $this->logger->expects(static::once())
             ->method('warning')
@@ -69,7 +70,7 @@ class GenerateVoucherActionTest extends TestCase
     public function testExecuteWithNullPromotionId(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $this->logger->expects(static::once())
             ->method('warning')
@@ -83,7 +84,7 @@ class GenerateVoucherActionTest extends TestCase
     public function testExecuteWithPromotionNotFound(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $promotionId = Uuid::randomHex();
 
         $searchResult = $this->createMock(EntitySearchResult::class);
@@ -109,7 +110,7 @@ class GenerateVoucherActionTest extends TestCase
     public function testExecuteWithPromotionNotUsingIndividualCodes(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $promotionId = Uuid::randomHex();
 
         $promotion = $this->createPromotion($promotionId, useIndividualCodes: false);
@@ -136,7 +137,7 @@ class GenerateVoucherActionTest extends TestCase
     public function testExecuteSuccessfully(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $promotionId = Uuid::randomHex();
 
         $promotion = $this->createPromotion($promotionId, useIndividualCodes: true);
@@ -186,7 +187,7 @@ class GenerateVoucherActionTest extends TestCase
     public function testExecuteWithCustomCodePattern(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $promotionId = Uuid::randomHex();
 
         $promotion = $this->createPromotion($promotionId, useIndividualCodes: true);
@@ -222,7 +223,7 @@ class GenerateVoucherActionTest extends TestCase
     public function testExecuteWithLiteralCodePattern(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $promotionId = Uuid::randomHex();
 
         $promotion = $this->createPromotion($promotionId, useIndividualCodes: true);
@@ -256,7 +257,7 @@ class GenerateVoucherActionTest extends TestCase
     public function testExecuteLogsErrorOnCreateFailure(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $promotionId = Uuid::randomHex();
 
         $promotion = $this->createPromotion($promotionId, useIndividualCodes: true);

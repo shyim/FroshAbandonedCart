@@ -12,6 +12,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
+use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\Uuid\Uuid;
 
 #[CoversClass(AddCustomerTagAction::class)]
@@ -42,7 +43,7 @@ class AddCustomerTagActionTest extends TestCase
     public function testExecuteWithMissingTagId(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $this->logger->expects(static::once())
             ->method('warning')
@@ -57,7 +58,7 @@ class AddCustomerTagActionTest extends TestCase
     public function testExecuteWithNullTagId(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $this->logger->expects(static::once())
             ->method('warning')
@@ -72,7 +73,7 @@ class AddCustomerTagActionTest extends TestCase
     public function testExecuteSuccessfully(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $tagId = Uuid::randomHex();
 
         $this->customerRepository->expects(static::once())
@@ -109,7 +110,7 @@ class AddCustomerTagActionTest extends TestCase
     public function testExecuteLogsErrorOnUpdateFailure(): void
     {
         $cart = $this->createAbandonedCart();
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $tagId = Uuid::randomHex();
 
         $exception = new \Exception('Tag does not exist');
@@ -138,7 +139,7 @@ class AddCustomerTagActionTest extends TestCase
     {
         $customerId = Uuid::randomHex();
         $cart = $this->createAbandonedCart($customerId);
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
         $tagId = Uuid::randomHex();
 
         $this->customerRepository->expects(static::once())

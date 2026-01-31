@@ -34,7 +34,6 @@ class AutomationProcessor
     /**
      * @param EntityRepository<AbandonedCartAutomationCollection> $automationRepository
      * @param EntityRepository<AbandonedCartCollection> $abandonedCartRepository
-     * @param EntityRepository $automationLogRepository
      * @param iterable<ConditionInterface> $conditions
      * @param iterable<ActionInterface> $actions
      */
@@ -93,7 +92,7 @@ class AutomationProcessor
 
             $conditions = $automation->getConditions();
 
-            if (!$this->evaluateConditions($cart, $conditions)) {
+            if (!$this->evaluateConditions($cart, $conditions, $context)) {
                 continue;
             }
 
@@ -125,7 +124,7 @@ class AutomationProcessor
     /**
      * @param array<int, array<string, mixed>> $conditionConfigs
      */
-    private function evaluateConditions(AbandonedCartEntity $cart, array $conditionConfigs): bool
+    private function evaluateConditions(AbandonedCartEntity $cart, array $conditionConfigs, Context $context): bool
     {
         // All conditions must match (AND logic)
         foreach ($conditionConfigs as $conditionConfig) {
@@ -145,7 +144,7 @@ class AutomationProcessor
                 return false;
             }
 
-            if (!$handler->evaluate($cart, $conditionConfig)) {
+            if (!$handler->evaluate($cart, $conditionConfig, $context)) {
                 return false;
             }
         }
@@ -158,7 +157,7 @@ class AutomationProcessor
      */
     private function executeActions(AbandonedCartEntity $cart, AbandonedCartAutomationEntity $automation, Context $context): array
     {
-        $actionContext = new ActionContext();
+        $actionContext = new ActionContext($context);
         $results = [];
 
         $actionConfigs = $automation->getActions();

@@ -6,7 +6,6 @@ namespace Frosh\AbandonedCart\Automation\Action;
 
 use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
 use Psr\Log\LoggerInterface;
-use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\Entity;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityCollection;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
@@ -48,7 +47,7 @@ class RemoveCustomerTagAction implements ActionInterface
                     'customerId' => $customerId,
                     'tagId' => $tagId,
                 ],
-            ], Context::createDefaultContext());
+            ], $context->getContext());
 
             $this->logger->info('RemoveCustomerTagAction: Removed tag from customer', [
                 'tagId' => $tagId,

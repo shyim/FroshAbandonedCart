@@ -39,25 +39,33 @@ Shopware.Component.register('frosh-abandoned-carts-detail', {
             return [
                 {
                     property: 'label',
-                    label: this.$tc('frosh-abandoned-carts.detail.columnProduct'),
+                    label: this.$tc(
+                        'frosh-abandoned-carts.detail.columnProduct'
+                    ),
                     allowResize: true,
                     primary: true,
                 },
                 {
                     property: 'quantity',
-                    label: this.$tc('frosh-abandoned-carts.detail.columnQuantity'),
+                    label: this.$tc(
+                        'frosh-abandoned-carts.detail.columnQuantity'
+                    ),
                     allowResize: true,
                     width: '100px',
                 },
                 {
                     property: 'unitPrice',
-                    label: this.$tc('frosh-abandoned-carts.detail.columnUnitPrice'),
+                    label: this.$tc(
+                        'frosh-abandoned-carts.detail.columnUnitPrice'
+                    ),
                     allowResize: true,
                     width: '150px',
                 },
                 {
                     property: 'totalPrice',
-                    label: this.$tc('frosh-abandoned-carts.detail.columnTotalPrice'),
+                    label: this.$tc(
+                        'frosh-abandoned-carts.detail.columnTotalPrice'
+                    ),
                     allowResize: true,
                     width: '150px',
                 },
@@ -104,9 +112,14 @@ Shopware.Component.register('frosh-abandoned-carts-detail', {
 
         getProductName(lineItem) {
             if (lineItem.product) {
-                return lineItem.product.translated?.name || lineItem.product.name;
+                return (
+                    lineItem.product.translated?.name || lineItem.product.name
+                );
             }
-            return lineItem.label || this.$tc('frosh-abandoned-carts.detail.unknownProduct');
+            return (
+                lineItem.label ||
+                this.$tc('frosh-abandoned-carts.detail.unknownProduct')
+            );
         },
     },
 });

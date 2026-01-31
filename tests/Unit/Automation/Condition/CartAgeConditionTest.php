@@ -9,15 +9,19 @@ use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Shopware\Core\Framework\Context;
 
 #[CoversClass(CartAgeCondition::class)]
 class CartAgeConditionTest extends TestCase
 {
     private CartAgeCondition $condition;
 
+    private Context $context;
+
     protected function setUp(): void
     {
         $this->condition = new CartAgeCondition();
+        $this->context = Context::createDefaultContext();
     }
 
     public function testGetType(): void
@@ -30,7 +34,7 @@ class CartAgeConditionTest extends TestCase
         $cart = $this->createMock(AbandonedCartEntity::class);
         $cart->method('getCreatedAt')->willReturn(null);
 
-        $result = $this->condition->evaluate($cart, ['operator' => '>=', 'value' => 24, 'unit' => 'hours']);
+        $result = $this->condition->evaluate($cart, ['operator' => '>=', 'value' => 24, 'unit' => 'hours'], $this->context);
 
         static::assertFalse($result);
     }
@@ -53,7 +57,7 @@ class CartAgeConditionTest extends TestCase
             'unit' => 'hours',
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertSame($expected, $result);
     }
@@ -226,7 +230,7 @@ class CartAgeConditionTest extends TestCase
             'unit' => $unit,
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertSame($expected, $result);
     }
@@ -305,7 +309,7 @@ class CartAgeConditionTest extends TestCase
         $cart = $this->createMock(AbandonedCartEntity::class);
         $cart->method('getCreatedAt')->willReturn($createdAt);
 
-        $result = $this->condition->evaluate($cart, []);
+        $result = $this->condition->evaluate($cart, [], $this->context);
 
         static::assertTrue($result);
     }
@@ -323,7 +327,7 @@ class CartAgeConditionTest extends TestCase
             'unit' => 'hours',
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertFalse($result);
     }
@@ -342,7 +346,7 @@ class CartAgeConditionTest extends TestCase
             'unit' => 'unknown_unit',
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertTrue($result);
     }

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Frosh\AbandonedCart\Automation\Action;
 
+use Shopware\Core\Framework\Context;
+
 class ActionContext
 {
     private ?string $voucherCode = null;
@@ -12,6 +14,16 @@ class ActionContext
      * @var array<string, mixed>
      */
     private array $data = [];
+
+    public function __construct(
+        private readonly Context $context
+    ) {
+    }
+
+    public function getContext(): Context
+    {
+        return $this->context;
+    }
 
     public function getVoucherCode(): ?string
     {

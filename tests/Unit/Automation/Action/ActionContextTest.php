@@ -7,20 +7,21 @@ namespace Frosh\AbandonedCart\Tests\Unit\Automation\Action;
 use Frosh\AbandonedCart\Automation\Action\ActionContext;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
+use Shopware\Core\Framework\Context;
 
 #[CoversClass(ActionContext::class)]
 class ActionContextTest extends TestCase
 {
     public function testVoucherCodeIsNullByDefault(): void
     {
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         static::assertNull($context->getVoucherCode());
     }
 
     public function testSetAndGetVoucherCode(): void
     {
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $context->setVoucherCode('VOUCHER123');
 
@@ -29,7 +30,7 @@ class ActionContextTest extends TestCase
 
     public function testSetVoucherCodeToNull(): void
     {
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $context->setVoucherCode('VOUCHER123');
         $context->setVoucherCode(null);
@@ -39,7 +40,7 @@ class ActionContextTest extends TestCase
 
     public function testGetWithDefaultValue(): void
     {
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         static::assertSame('default', $context->get('non_existent', 'default'));
         static::assertNull($context->get('non_existent'));
@@ -47,7 +48,7 @@ class ActionContextTest extends TestCase
 
     public function testSetAndGet(): void
     {
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $context->set('key1', 'value1');
         $context->set('key2', 123);
@@ -60,7 +61,7 @@ class ActionContextTest extends TestCase
 
     public function testHas(): void
     {
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         static::assertFalse($context->has('key'));
 
@@ -71,7 +72,7 @@ class ActionContextTest extends TestCase
 
     public function testHasWithNullValue(): void
     {
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $context->set('null_key', null);
 
@@ -80,7 +81,7 @@ class ActionContextTest extends TestCase
 
     public function testAll(): void
     {
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         static::assertSame([], $context->all());
 
@@ -95,7 +96,7 @@ class ActionContextTest extends TestCase
 
     public function testOverwriteExistingKey(): void
     {
-        $context = new ActionContext();
+        $context = new ActionContext(Context::createDefaultContext());
 
         $context->set('key', 'old_value');
         $context->set('key', 'new_value');

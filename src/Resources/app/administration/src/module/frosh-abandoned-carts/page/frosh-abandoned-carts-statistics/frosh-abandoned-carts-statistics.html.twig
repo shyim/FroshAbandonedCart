@@ -2,61 +2,89 @@
 <sw-page class="frosh-abandoned-carts-statistics">
     {% block frosh_abandoned_carts_statistics_smart_bar_header %}
     <template #smart-bar-header>
-        <h2>{{ $tc('frosh-abandoned-carts.statistics.title') }}</h2>
+        <h2>
+            {{ $tc('frosh-abandoned-carts.statistics.title') }}
+        </h2>
     </template>
     {% endblock %}
 
     {% block frosh_abandoned_carts_statistics_content %}
     <template #content>
         <template v-if="isLoading">
-            <sw-skeleton variant="detail" />
-            <sw-skeleton variant="detail" />
+            <sw-skeleton variant="detail"/>
+            <sw-skeleton variant="detail"/>
         </template>
 
         <template v-else>
             {% block frosh_abandoned_carts_statistics_summary %}
             <div class="frosh-abandoned-carts-statistics__summary">
-                <mt-card position-identifier="frosh-abandoned-carts-statistics-summary">
+                <mt-card
+                    position-identifier="frosh-abandoned-carts-statistics-summary"
+                >
                     <div class="frosh-abandoned-carts-statistics__summary-grid">
                         {% block frosh_abandoned_carts_statistics_summary_total_count %}
-                        <div class="frosh-abandoned-carts-statistics__summary-item">
-                            <span class="frosh-abandoned-carts-statistics__summary-label">
+                        <div
+                            class="frosh-abandoned-carts-statistics__summary-item"
+                        >
+                            <span
+                                class="frosh-abandoned-carts-statistics__summary-label"
+                            >
                                 {{ $tc('frosh-abandoned-carts.statistics.totalCount') }}
                             </span>
-                            <span class="frosh-abandoned-carts-statistics__summary-value">
+                            <span
+                                class="frosh-abandoned-carts-statistics__summary-value"
+                            >
                                 {{ totalCount }}
                             </span>
                         </div>
                         {% endblock %}
 
                         {% block frosh_abandoned_carts_statistics_summary_total_value %}
-                        <div class="frosh-abandoned-carts-statistics__summary-item">
-                            <span class="frosh-abandoned-carts-statistics__summary-label">
+                        <div
+                            class="frosh-abandoned-carts-statistics__summary-item"
+                        >
+                            <span
+                                class="frosh-abandoned-carts-statistics__summary-label"
+                            >
                                 {{ $tc('frosh-abandoned-carts.statistics.totalValue') }}
                             </span>
-                            <span class="frosh-abandoned-carts-statistics__summary-value">
+                            <span
+                                class="frosh-abandoned-carts-statistics__summary-value"
+                            >
                                 {{ formatPrice(totalValue) }}
                             </span>
                         </div>
                         {% endblock %}
 
                         {% block frosh_abandoned_carts_statistics_summary_today_count %}
-                        <div class="frosh-abandoned-carts-statistics__summary-item">
-                            <span class="frosh-abandoned-carts-statistics__summary-label">
+                        <div
+                            class="frosh-abandoned-carts-statistics__summary-item"
+                        >
+                            <span
+                                class="frosh-abandoned-carts-statistics__summary-label"
+                            >
                                 {{ $tc('frosh-abandoned-carts.statistics.todayCount') }}
                             </span>
-                            <span class="frosh-abandoned-carts-statistics__summary-value">
+                            <span
+                                class="frosh-abandoned-carts-statistics__summary-value"
+                            >
                                 {{ todayCount }}
                             </span>
                         </div>
                         {% endblock %}
 
                         {% block frosh_abandoned_carts_statistics_summary_today_value %}
-                        <div class="frosh-abandoned-carts-statistics__summary-item">
-                            <span class="frosh-abandoned-carts-statistics__summary-label">
+                        <div
+                            class="frosh-abandoned-carts-statistics__summary-item"
+                        >
+                            <span
+                                class="frosh-abandoned-carts-statistics__summary-label"
+                            >
                                 {{ $tc('frosh-abandoned-carts.statistics.todayValue') }}
                             </span>
-                            <span class="frosh-abandoned-carts-statistics__summary-value">
+                            <span
+                                class="frosh-abandoned-carts-statistics__summary-value"
+                            >
                                 {{ formatPrice(todayValue) }}
                             </span>
                         </div>

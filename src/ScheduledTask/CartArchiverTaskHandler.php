@@ -76,9 +76,7 @@ class CartArchiverTaskHandler extends ScheduledTaskHandler
                 $tokensToDelete[] = $cartRow['token'];
             }
 
-            if (!empty($tokensToDelete)) {
-                $this->deleteOldCarts($tokensToDelete);
-            }
+            $this->deleteOldCarts($tokensToDelete);
         } while (\count($carts) === self::BATCH_SIZE);
     }
 

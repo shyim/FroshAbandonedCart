@@ -19,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         shopware-version:
-          - '6.7.6.2'
+          - 'v6.7.6.2'
     uses: shopware/github-actions/.github/workflows/phpunit.yml@main
     with:
       extensionName: ${{ github.event.repository.name }}

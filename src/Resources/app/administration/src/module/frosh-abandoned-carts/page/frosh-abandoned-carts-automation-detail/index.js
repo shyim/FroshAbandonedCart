@@ -29,7 +29,9 @@ Shopware.Component.register('frosh-abandoned-carts-automation-detail', {
 
     computed: {
         automationRepository() {
-            return this.repositoryFactory.create('frosh_abandoned_cart_automation');
+            return this.repositoryFactory.create(
+                'frosh_abandoned_cart_automation'
+            );
         },
 
         isCreateMode() {
@@ -45,22 +47,88 @@ Shopware.Component.register('frosh-abandoned-carts-automation-detail', {
 
         conditionTypeOptions() {
             return [
-                { id: 'cart_age', value: 'cart_age', label: this.$tc('frosh-abandoned-carts.automations.conditions.cart_age') },
-                { id: 'cart_value', value: 'cart_value', label: this.$tc('frosh-abandoned-carts.automations.conditions.cart_value') },
-                { id: 'automation_count', value: 'automation_count', label: this.$tc('frosh-abandoned-carts.automations.conditions.automation_count') },
-                { id: 'time_since_last_automation', value: 'time_since_last_automation', label: this.$tc('frosh-abandoned-carts.automations.conditions.time_since_last_automation') },
-                { id: 'customer_tag', value: 'customer_tag', label: this.$tc('frosh-abandoned-carts.automations.conditions.customer_tag') },
-                { id: 'line_item_count', value: 'line_item_count', label: this.$tc('frosh-abandoned-carts.automations.conditions.line_item_count') },
+                {
+                    id: 'cart_age',
+                    value: 'cart_age',
+                    label: this.$tc(
+                        'frosh-abandoned-carts.automations.conditions.cart_age'
+                    ),
+                },
+                {
+                    id: 'cart_value',
+                    value: 'cart_value',
+                    label: this.$tc(
+                        'frosh-abandoned-carts.automations.conditions.cart_value'
+                    ),
+                },
+                {
+                    id: 'automation_count',
+                    value: 'automation_count',
+                    label: this.$tc(
+                        'frosh-abandoned-carts.automations.conditions.automation_count'
+                    ),
+                },
+                {
+                    id: 'time_since_last_automation',
+                    value: 'time_since_last_automation',
+                    label: this.$tc(
+                        'frosh-abandoned-carts.automations.conditions.time_since_last_automation'
+                    ),
+                },
+                {
+                    id: 'customer_tag',
+                    value: 'customer_tag',
+                    label: this.$tc(
+                        'frosh-abandoned-carts.automations.conditions.customer_tag'
+                    ),
+                },
+                {
+                    id: 'line_item_count',
+                    value: 'line_item_count',
+                    label: this.$tc(
+                        'frosh-abandoned-carts.automations.conditions.line_item_count'
+                    ),
+                },
             ];
         },
 
         actionTypeOptions() {
             return [
-                { id: 'send_email', value: 'send_email', label: this.$tc('frosh-abandoned-carts.automations.actions.send_email') },
-                { id: 'generate_voucher', value: 'generate_voucher', label: this.$tc('frosh-abandoned-carts.automations.actions.generate_voucher') },
-                { id: 'add_customer_tag', value: 'add_customer_tag', label: this.$tc('frosh-abandoned-carts.automations.actions.add_customer_tag') },
-                { id: 'remove_customer_tag', value: 'remove_customer_tag', label: this.$tc('frosh-abandoned-carts.automations.actions.remove_customer_tag') },
-                { id: 'set_customer_custom_field', value: 'set_customer_custom_field', label: this.$tc('frosh-abandoned-carts.automations.actions.set_customer_custom_field') },
+                {
+                    id: 'send_email',
+                    value: 'send_email',
+                    label: this.$tc(
+                        'frosh-abandoned-carts.automations.actions.send_email'
+                    ),
+                },
+                {
+                    id: 'generate_voucher',
+                    value: 'generate_voucher',
+                    label: this.$tc(
+                        'frosh-abandoned-carts.automations.actions.generate_voucher'
+                    ),
+                },
+                {
+                    id: 'add_customer_tag',
+                    value: 'add_customer_tag',
+                    label: this.$tc(
+                        'frosh-abandoned-carts.automations.actions.add_customer_tag'
+                    ),
+                },
+                {
+                    id: 'remove_customer_tag',
+                    value: 'remove_customer_tag',
+                    label: this.$tc(
+                        'frosh-abandoned-carts.automations.actions.remove_customer_tag'
+                    ),
+                },
+                {
+                    id: 'set_customer_custom_field',
+                    value: 'set_customer_custom_field',
+                    label: this.$tc(
+                        'frosh-abandoned-carts.automations.actions.set_customer_custom_field'
+                    ),
+                },
             ];
         },
 
@@ -77,8 +145,20 @@ Shopware.Component.register('frosh-abandoned-carts-automation-detail', {
 
         unitOptions() {
             return [
-                { id: 'hours', value: 'hours', label: this.$tc('frosh-abandoned-carts.automations.detail.hours') },
-                { id: 'days', value: 'days', label: this.$tc('frosh-abandoned-carts.automations.detail.days') },
+                {
+                    id: 'hours',
+                    value: 'hours',
+                    label: this.$tc(
+                        'frosh-abandoned-carts.automations.detail.hours'
+                    ),
+                },
+                {
+                    id: 'days',
+                    value: 'days',
+                    label: this.$tc(
+                        'frosh-abandoned-carts.automations.detail.days'
+                    ),
+                },
             ];
         },
     },
@@ -93,7 +173,9 @@ Shopware.Component.register('frosh-abandoned-carts-automation-detail', {
 
     methods: {
         createAutomation() {
-            this.automation = this.automationRepository.create(Shopware.Context.api);
+            this.automation = this.automationRepository.create(
+                Shopware.Context.api
+            );
             this.automation.active = false;
             this.automation.priority = 1;
             this.automation.conditions = [];
@@ -107,7 +189,7 @@ Shopware.Component.register('frosh-abandoned-carts-automation-detail', {
                 this.automation = await this.automationRepository.get(
                     this.automationId,
                     Shopware.Context.api,
-                    this.criteria,
+                    this.criteria
                 );
 
                 // Ensure conditions is always an array
@@ -130,7 +212,10 @@ Shopware.Component.register('frosh-abandoned-carts-automation-detail', {
             this.isSaveSuccessful = false;
 
             try {
-                await this.automationRepository.save(this.automation, Shopware.Context.api);
+                await this.automationRepository.save(
+                    this.automation,
+                    Shopware.Context.api
+                );
                 this.isSaveSuccessful = true;
 
                 if (this.isCreateMode) {
@@ -187,7 +272,9 @@ Shopware.Component.register('frosh-abandoned-carts-automation-detail', {
         },
 
         getConditionTypeLabel(type) {
-            const found = this.conditionTypeOptions.find((c) => c.value === type);
+            const found = this.conditionTypeOptions.find(
+                (c) => c.value === type
+            );
             return found ? found.label : type;
         },
 
@@ -197,11 +284,19 @@ Shopware.Component.register('frosh-abandoned-carts-automation-detail', {
         },
 
         needsValueInput(conditionType) {
-            return ['cart_age', 'cart_value', 'automation_count', 'time_since_last_automation', 'line_item_count'].includes(conditionType);
+            return [
+                'cart_age',
+                'cart_value',
+                'automation_count',
+                'time_since_last_automation',
+                'line_item_count',
+            ].includes(conditionType);
         },
 
         needsUnitInput(conditionType) {
-            return ['cart_age', 'time_since_last_automation'].includes(conditionType);
+            return ['cart_age', 'time_since_last_automation'].includes(
+                conditionType
+            );
         },
 
         needsTagInput(conditionType) {
@@ -217,7 +312,9 @@ Shopware.Component.register('frosh-abandoned-carts-automation-detail', {
         },
 
         needsTagActionInput(actionType) {
-            return ['add_customer_tag', 'remove_customer_tag'].includes(actionType);
+            return ['add_customer_tag', 'remove_customer_tag'].includes(
+                actionType
+            );
         },
 
         needsCustomFieldInput(actionType) {
@@ -229,10 +326,11 @@ Shopware.Component.register('frosh-abandoned-carts-automation-detail', {
             this.testResults = null;
 
             try {
-                this.testResults = await this.froshAbandonedCartAutomationApiService.testAutomation(
-                    this.automation.conditions || [],
-                    this.automation.salesChannelId,
-                );
+                this.testResults =
+                    await this.froshAbandonedCartAutomationApiService.testAutomation(
+                        this.automation.conditions || [],
+                        this.automation.salesChannelId
+                    );
                 this.showTestModal = true;
             } catch (error) {
                 console.error('Failed to test automation:', error);

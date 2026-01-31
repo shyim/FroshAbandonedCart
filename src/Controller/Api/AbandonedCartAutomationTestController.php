@@ -58,7 +58,7 @@ class AbandonedCartAutomationTestController extends AbstractController
         $nonMatchingCarts = [];
 
         foreach ($carts as $cart) {
-            $matches = $this->evaluateConditions($cart, $conditions, $conditionHandlers);
+            $matches = $this->evaluateConditions($cart, $conditions, $conditionHandlers, $context);
 
             $cartData = [
                 'id' => $cart->getId(),
@@ -90,7 +90,7 @@ class AbandonedCartAutomationTestController extends AbstractController
      * @param array<int, array<string, mixed>> $conditionConfigs
      * @param array<string, ConditionInterface> $conditionHandlers
      */
-    private function evaluateConditions(AbandonedCartEntity $cart, array $conditionConfigs, array $conditionHandlers): bool
+    private function evaluateConditions(AbandonedCartEntity $cart, array $conditionConfigs, array $conditionHandlers, Context $context): bool
     {
         if (empty($conditionConfigs)) {
             return true;
@@ -103,7 +103,7 @@ class AbandonedCartAutomationTestController extends AbstractController
                 return false;
             }
 
-            if (!$conditionHandlers[$type]->evaluate($cart, $conditionConfig)) {
+            if (!$conditionHandlers[$type]->evaluate($cart, $conditionConfig, $context)) {
                 return false;
             }
         }

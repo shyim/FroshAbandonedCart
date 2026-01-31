@@ -53,7 +53,9 @@
             >
                 {% block frosh_abandoned_carts_automation_list_column_name %}
                 <template #column-name="{ item }">
-                    <router-link :to="{ name: 'frosh.abandoned.carts.automation.detail', params: { id: item.id } }">
+                    <router-link
+                        :to="{ name: 'frosh.abandoned.carts.automation.detail', params: { id: item.id } }"
+                    >
                         {{ item.name }}
                     </router-link>
                 </template>
@@ -88,7 +90,7 @@
 
                 {% block frosh_abandoned_carts_automation_list_column_created_at %}
                 <template #column-createdAt="{ item }">
-                    <sw-time-ago :date="item.createdAt" />
+                    <sw-time-ago :date="item.createdAt"/>
                 </template>
                 {% endblock %}
             </sw-entity-listing>

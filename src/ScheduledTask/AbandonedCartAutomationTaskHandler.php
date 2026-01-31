@@ -24,6 +24,6 @@ class AbandonedCartAutomationTaskHandler extends ScheduledTaskHandler
 
     public function run(): void
     {
-        $this->processor->process(Context::createDefaultContext());
+        $this->processor->process(Context::createCLIContext());
     }
 }

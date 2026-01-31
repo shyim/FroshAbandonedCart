@@ -16,7 +16,7 @@ class CartValueCondition implements ConditionInterface
     /**
      * @param array<string, mixed> $config
      */
-    public function evaluate(AbandonedCartEntity $cart, array $config): bool
+    public function evaluate(AbandonedCartEntity $cart, array $config, \Shopware\Core\Framework\Context $context): bool
     {
         $operator = $config['operator'] ?? '>=';
         $value = (float) ($config['value'] ?? 0);

@@ -6,7 +6,6 @@ namespace Frosh\AbandonedCart\Automation\Condition;
 
 use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
 use Shopware\Core\Checkout\Customer\CustomerCollection;
-use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 
@@ -28,7 +27,7 @@ class CustomerTagCondition implements ConditionInterface
     /**
      * @param array<string, mixed> $config
      */
-    public function evaluate(AbandonedCartEntity $cart, array $config): bool
+    public function evaluate(AbandonedCartEntity $cart, array $config, \Shopware\Core\Framework\Context $context): bool
     {
         $tagId = $config['tagId'] ?? null;
         $negate = (bool) ($config['negate'] ?? false);
@@ -41,7 +40,7 @@ class CustomerTagCondition implements ConditionInterface
         $criteria = new Criteria([$customerId]);
         $criteria->addAssociation('tags');
 
-        $customer = $this->customerRepository->search($criteria, Context::createDefaultContext())->getEntities()->first();
+        $customer = $this->customerRepository->search($criteria, $context)->getEntities()->first();
 
         if ($customer === null) {
             return $negate;

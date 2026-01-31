@@ -7,7 +7,6 @@ namespace Frosh\AbandonedCart\Automation\Action;
 use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
 use Psr\Log\LoggerInterface;
 use Shopware\Core\Checkout\Customer\CustomerCollection;
-use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 
@@ -42,7 +41,7 @@ class SetCustomerCustomFieldAction implements ActionInterface
         }
 
         $customerId = $cart->getCustomerId();
-        $dbContext = Context::createDefaultContext();
+        $dbContext = $context->getContext();
 
         try {
             $customer = $this->customerRepository->search(

@@ -8,9 +8,7 @@ Shopware.Component.register('frosh-abandoned-carts-list', {
 
     inject: ['repositoryFactory', 'filterFactory'],
 
-    mixins: [
-        Mixin.getByName('listing'),
-    ],
+    mixins: [Mixin.getByName('listing')],
 
     data() {
         return {
@@ -19,10 +17,7 @@ Shopware.Component.register('frosh-abandoned-carts-list', {
             sortBy: 'createdAt',
             sortDirection: 'DESC',
             filterCriteria: [],
-            defaultFilters: [
-                'sales-channel-filter',
-                'customer-filter',
-            ],
+            defaultFilters: ['sales-channel-filter', 'customer-filter'],
             storeKey: 'grid.filter.frosh_abandoned_cart',
             activeFilterNumber: 0,
         };
@@ -37,23 +32,31 @@ Shopware.Component.register('frosh-abandoned-carts-list', {
             return [
                 {
                     property: 'customer.email',
-                    label: this.$tc('frosh-abandoned-carts.list.columnCustomer'),
+                    label: this.$tc(
+                        'frosh-abandoned-carts.list.columnCustomer'
+                    ),
                     allowResize: true,
                     primary: true,
                 },
                 {
                     property: 'totalPrice',
-                    label: this.$tc('frosh-abandoned-carts.list.columnTotalPrice'),
+                    label: this.$tc(
+                        'frosh-abandoned-carts.list.columnTotalPrice'
+                    ),
                     allowResize: true,
                 },
                 {
                     property: 'salesChannel.name',
-                    label: this.$tc('frosh-abandoned-carts.list.columnSalesChannel'),
+                    label: this.$tc(
+                        'frosh-abandoned-carts.list.columnSalesChannel'
+                    ),
                     allowResize: true,
                 },
                 {
                     property: 'createdAt',
-                    label: this.$tc('frosh-abandoned-carts.list.columnCreatedAt'),
+                    label: this.$tc(
+                        'frosh-abandoned-carts.list.columnCreatedAt'
+                    ),
                     allowResize: true,
                 },
             ];
@@ -63,20 +66,31 @@ Shopware.Component.register('frosh-abandoned-carts-list', {
             return {
                 'sales-channel-filter': {
                     property: 'salesChannel',
-                    label: this.$tc('frosh-abandoned-carts.list.filterSalesChannel'),
-                    placeholder: this.$tc('frosh-abandoned-carts.list.filterSalesChannelPlaceholder'),
+                    label: this.$tc(
+                        'frosh-abandoned-carts.list.filterSalesChannel'
+                    ),
+                    placeholder: this.$tc(
+                        'frosh-abandoned-carts.list.filterSalesChannelPlaceholder'
+                    ),
                 },
                 'customer-filter': {
                     property: 'customer',
-                    label: this.$tc('frosh-abandoned-carts.list.filterCustomer'),
-                    placeholder: this.$tc('frosh-abandoned-carts.list.filterCustomerPlaceholder'),
+                    label: this.$tc(
+                        'frosh-abandoned-carts.list.filterCustomer'
+                    ),
+                    placeholder: this.$tc(
+                        'frosh-abandoned-carts.list.filterCustomerPlaceholder'
+                    ),
                     labelProperty: 'email',
                 },
             };
         },
 
         listFilters() {
-            return this.filterFactory.create('frosh_abandoned_cart', this.listFilterOptions);
+            return this.filterFactory.create(
+                'frosh_abandoned_cart',
+                this.listFilterOptions
+            );
         },
 
         defaultCriteria() {
@@ -107,12 +121,14 @@ Shopware.Component.register('frosh-abandoned-carts-list', {
             this.isLoading = true;
 
             try {
-                const criteria = await Shopware.Service('filterService').mergeWithStoredFilters(
-                    this.storeKey,
-                    this.defaultCriteria,
-                );
+                const criteria = await Shopware.Service(
+                    'filterService'
+                ).mergeWithStoredFilters(this.storeKey, this.defaultCriteria);
 
-                const result = await this.abandonedCartRepository.search(criteria, Shopware.Context.api);
+                const result = await this.abandonedCartRepository.search(
+                    criteria,
+                    Shopware.Context.api
+                );
                 this.abandonedCarts = result;
                 this.total = result.total;
             } catch (error) {

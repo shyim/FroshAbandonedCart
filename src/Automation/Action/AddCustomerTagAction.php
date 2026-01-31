@@ -7,7 +7,6 @@ namespace Frosh\AbandonedCart\Automation\Action;
 use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
 use Psr\Log\LoggerInterface;
 use Shopware\Core\Checkout\Customer\CustomerCollection;
-use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 
 class AddCustomerTagAction implements ActionInterface
@@ -49,7 +48,7 @@ class AddCustomerTagAction implements ActionInterface
                         ['id' => $tagId],
                     ],
                 ],
-            ], Context::createDefaultContext());
+            ], $context->getContext());
 
             $this->logger->info('AddCustomerTagAction: Added tag to customer', [
                 'tagId' => $tagId,

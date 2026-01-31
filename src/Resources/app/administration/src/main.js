@@ -4,12 +4,24 @@ import FroshAbandonedCartAutomationApiService from './service/frosh-abandoned-ca
 
 const { Application } = Shopware;
 
-Application.addServiceProvider('froshAbandonedCartStatisticsService', (container) => {
-    const initContainer = Application.getContainer('init');
-    return new AbandonedCartStatisticsService(initContainer.httpClient, container.loginService);
-});
+Application.addServiceProvider(
+    'froshAbandonedCartStatisticsService',
+    (container) => {
+        const initContainer = Application.getContainer('init');
+        return new AbandonedCartStatisticsService(
+            initContainer.httpClient,
+            container.loginService
+        );
+    }
+);
 
-Application.addServiceProvider('froshAbandonedCartAutomationApiService', (container) => {
-    const initContainer = Application.getContainer('init');
-    return new FroshAbandonedCartAutomationApiService(initContainer.httpClient, container.loginService);
-});
+Application.addServiceProvider(
+    'froshAbandonedCartAutomationApiService',
+    (container) => {
+        const initContainer = Application.getContainer('init');
+        return new FroshAbandonedCartAutomationApiService(
+            initContainer.httpClient,
+            container.loginService
+        );
+    }
+);

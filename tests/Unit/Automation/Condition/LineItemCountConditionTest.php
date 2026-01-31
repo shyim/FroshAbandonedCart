@@ -11,6 +11,7 @@ use Frosh\AbandonedCart\Entity\AbandonedCartLineItemEntity;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\Uuid\Uuid;
 
 #[CoversClass(LineItemCountCondition::class)]
@@ -18,9 +19,12 @@ class LineItemCountConditionTest extends TestCase
 {
     private LineItemCountCondition $condition;
 
+    private Context $context;
+
     protected function setUp(): void
     {
         $this->condition = new LineItemCountCondition();
+        $this->context = Context::createDefaultContext();
     }
 
     public function testGetType(): void
@@ -34,10 +38,10 @@ class LineItemCountConditionTest extends TestCase
         $cart->method('getLineItems')->willReturn(null);
 
         // With null line items, count should be 0
-        $result = $this->condition->evaluate($cart, ['operator' => '==', 'value' => 0]);
+        $result = $this->condition->evaluate($cart, ['operator' => '==', 'value' => 0], $this->context);
         static::assertTrue($result);
 
-        $result = $this->condition->evaluate($cart, ['operator' => '>=', 'value' => 1]);
+        $result = $this->condition->evaluate($cart, ['operator' => '>=', 'value' => 1], $this->context);
         static::assertFalse($result);
     }
 
@@ -58,7 +62,7 @@ class LineItemCountConditionTest extends TestCase
             'value' => $configValue,
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertSame($expected, $result);
     }
@@ -221,7 +225,7 @@ class LineItemCountConditionTest extends TestCase
         $cart->method('getLineItems')->willReturn($lineItems);
 
         // Default operator is >=, default value is 1
-        $result = $this->condition->evaluate($cart, []);
+        $result = $this->condition->evaluate($cart, [], $this->context);
 
         static::assertTrue($result);
     }
@@ -238,7 +242,7 @@ class LineItemCountConditionTest extends TestCase
             'value' => 0,
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertTrue($result);
     }
@@ -255,7 +259,7 @@ class LineItemCountConditionTest extends TestCase
             'value' => 5,
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertFalse($result);
     }
@@ -273,7 +277,7 @@ class LineItemCountConditionTest extends TestCase
             'value' => 5,
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertFalse($result);
     }
@@ -291,7 +295,7 @@ class LineItemCountConditionTest extends TestCase
             'value' => 5,
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertTrue($result);
     }
@@ -309,7 +313,7 @@ class LineItemCountConditionTest extends TestCase
             'value' => 10,
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertFalse($result);
     }
@@ -327,7 +331,7 @@ class LineItemCountConditionTest extends TestCase
             'value' => 1,
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertTrue($result);
     }
@@ -345,7 +349,7 @@ class LineItemCountConditionTest extends TestCase
             'value' => 50,
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertTrue($result);
     }

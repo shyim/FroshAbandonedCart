@@ -9,7 +9,6 @@ use Psr\Log\LoggerInterface;
 use Shopware\Core\Content\Mail\Service\MailService;
 use Shopware\Core\Content\MailTemplate\MailTemplateCollection;
 use Shopware\Core\Content\MailTemplate\MailTemplateEntity;
-use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
 use Shopware\Core\Framework\Validation\DataBag\DataBag;
@@ -45,7 +44,7 @@ class SendEmailAction implements ActionInterface
             return;
         }
 
-        $mailTemplate = $this->getMailTemplate($mailTemplateId);
+        $mailTemplate = $this->getMailTemplate($mailTemplateId, $context->getContext());
         if ($mailTemplate === null) {
             $this->logger->warning('SendEmailAction: Mail template not found', ['mailTemplateId' => $mailTemplateId]);
 
@@ -89,7 +88,7 @@ class SendEmailAction implements ActionInterface
         ];
 
         try {
-            $this->mailService->send($data->all(), Context::createDefaultContext(), $templateData);
+            $this->mailService->send($data->all(), $context->getContext(), $templateData);
         } catch (\Exception $e) {
             $this->logger->error('SendEmailAction: Failed to send email', [
                 'error' => $e->getMessage(),
@@ -99,12 +98,12 @@ class SendEmailAction implements ActionInterface
         }
     }
 
-    private function getMailTemplate(string $id): ?MailTemplateEntity
+    private function getMailTemplate(string $id, \Shopware\Core\Framework\Context $context): ?MailTemplateEntity
     {
         $criteria = new Criteria([$id]);
         $criteria->addAssociation('media.media');
         $criteria->setLimit(1);
 
-        return $this->mailTemplateRepository->search($criteria, Context::createDefaultContext())->getEntities()->first();
+        return $this->mailTemplateRepository->search($criteria, $context)->getEntities()->first();
     }
 }

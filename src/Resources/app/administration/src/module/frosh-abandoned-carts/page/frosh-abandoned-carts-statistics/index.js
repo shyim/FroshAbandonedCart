@@ -75,7 +75,7 @@ Shopware.Component.register('frosh-abandoned-carts-statistics', {
                             Shopware.Utils.format.currency(
                                 Number.parseFloat(value),
                                 this.systemCurrencyISOCode,
-                                2,
+                                2
                             ),
                     },
                 },
@@ -94,7 +94,9 @@ Shopware.Component.register('frosh-abandoned-carts-statistics', {
 
             return [
                 {
-                    name: this.$tc('frosh-abandoned-carts.statistics.chartLabelCount'),
+                    name: this.$tc(
+                        'frosh-abandoned-carts.statistics.chartLabelCount'
+                    ),
                     data: seriesData,
                 },
             ];
@@ -112,7 +114,9 @@ Shopware.Component.register('frosh-abandoned-carts-statistics', {
 
             return [
                 {
-                    name: this.$tc('frosh-abandoned-carts.statistics.chartLabelValue'),
+                    name: this.$tc(
+                        'frosh-abandoned-carts.statistics.chartLabelValue'
+                    ),
                     data: seriesData,
                 },
             ];
@@ -146,11 +150,22 @@ Shopware.Component.register('frosh-abandoned-carts-statistics', {
             this.isLoading = true;
 
             try {
-                const maxRange = Math.max(this.countDateRange.range, this.valueDateRange.range);
-                const since = this.formatDateToISO(this.getDateAgo({ range: maxRange }));
-                const timezone = Shopware.Store.get('session').currentUser?.timeZone ?? 'UTC';
+                const maxRange = Math.max(
+                    this.countDateRange.range,
+                    this.valueDateRange.range
+                );
+                const since = this.formatDateToISO(
+                    this.getDateAgo({ range: maxRange })
+                );
+                const timezone =
+                    Shopware.Store.get('session').currentUser?.timeZone ??
+                    'UTC';
 
-                const data = await this.froshAbandonedCartStatisticsService.getStatistics(since, timezone);
+                const data =
+                    await this.froshAbandonedCartStatisticsService.getStatistics(
+                        since,
+                        timezone
+                    );
 
                 this.totalCount = data.totalCount;
                 this.totalValue = data.totalValue;
@@ -178,13 +193,19 @@ Shopware.Component.register('frosh-abandoned-carts-statistics', {
 
         parseDate(date) {
             const parsedDate = new Date(
-                date.replace(/-/g, '/').replace('T', ' ').replace(/\..*|\+.*/, ''),
+                date
+                    .replace(/-/g, '/')
+                    .replace('T', ' ')
+                    .replace(/\..*|\+.*/, '')
             );
             return parsedDate.valueOf();
         },
 
         formatChartHeadlineDate(date) {
-            const lastKnownLang = Shopware.Application.getContainer('factory').locale.getLastKnownLocale();
+            const lastKnownLang =
+                Shopware.Application.getContainer(
+                    'factory'
+                ).locale.getLastKnownLocale();
             return date.toLocaleDateString(lastKnownLang, {
                 day: 'numeric',
                 month: 'short',
@@ -196,7 +217,9 @@ Shopware.Component.register('frosh-abandoned-carts-statistics', {
         },
 
         async onCountRangeUpdate(rangeLabel) {
-            const range = this.rangesValueMap.find((item) => item.label === rangeLabel);
+            const range = this.rangesValueMap.find(
+                (item) => item.label === rangeLabel
+            );
             if (!range) {
                 return;
             }
@@ -206,7 +229,9 @@ Shopware.Component.register('frosh-abandoned-carts-statistics', {
         },
 
         async onValueRangeUpdate(rangeLabel) {
-            const range = this.rangesValueMap.find((item) => item.label === rangeLabel);
+            const range = this.rangesValueMap.find(
+                (item) => item.label === rangeLabel
+            );
             if (!range) {
                 return;
             }

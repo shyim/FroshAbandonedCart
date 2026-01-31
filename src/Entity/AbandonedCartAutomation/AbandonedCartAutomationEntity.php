@@ -20,12 +20,12 @@ class AbandonedCartAutomationEntity extends Entity
     protected int $priority = 0;
 
     /**
-     * @var array<string, mixed>
+     * @var array<int, array<string, mixed>>
      */
     protected array $conditions = [];
 
     /**
-     * @var array<string, mixed>
+     * @var array<int, array<string, mixed>>
      */
     protected array $actions = [];
 
@@ -66,7 +66,7 @@ class AbandonedCartAutomationEntity extends Entity
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<int, array<string, mixed>>
      */
     public function getConditions(): array
     {
@@ -74,7 +74,7 @@ class AbandonedCartAutomationEntity extends Entity
     }
 
     /**
-     * @param array<string, mixed> $conditions
+     * @param array<int, array<string, mixed>> $conditions
      */
     public function setConditions(array $conditions): void
     {
@@ -82,7 +82,7 @@ class AbandonedCartAutomationEntity extends Entity
     }
 
     /**
-     * @return array<string, mixed>
+     * @return array<int, array<string, mixed>>
      */
     public function getActions(): array
     {
@@ -90,7 +90,7 @@ class AbandonedCartAutomationEntity extends Entity
     }
 
     /**
-     * @param array<string, mixed> $actions
+     * @param array<int, array<string, mixed>> $actions
      */
     public function setActions(array $actions): void
     {

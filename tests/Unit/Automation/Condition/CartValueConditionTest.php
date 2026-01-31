@@ -9,15 +9,19 @@ use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Shopware\Core\Framework\Context;
 
 #[CoversClass(CartValueCondition::class)]
 class CartValueConditionTest extends TestCase
 {
     private CartValueCondition $condition;
 
+    private Context $context;
+
     protected function setUp(): void
     {
         $this->condition = new CartValueCondition();
+        $this->context = Context::createDefaultContext();
     }
 
     public function testGetType(): void
@@ -40,7 +44,7 @@ class CartValueConditionTest extends TestCase
             'value' => $configValue,
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertSame($expected, $result);
     }
@@ -213,7 +217,7 @@ class CartValueConditionTest extends TestCase
         $cart->method('getTotalPrice')->willReturn(50.0);
 
         // Default operator is >=, default value is 0
-        $result = $this->condition->evaluate($cart, []);
+        $result = $this->condition->evaluate($cart, [], $this->context);
 
         static::assertTrue($result);
     }
@@ -228,7 +232,7 @@ class CartValueConditionTest extends TestCase
             'value' => 0.0,
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertTrue($result);
     }
@@ -243,7 +247,7 @@ class CartValueConditionTest extends TestCase
             'value' => 50.0,
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertFalse($result);
     }
@@ -263,7 +267,7 @@ class CartValueConditionTest extends TestCase
             'value' => $configValue,
         ];
 
-        $result = $this->condition->evaluate($cart, $config);
+        $result = $this->condition->evaluate($cart, $config, $this->context);
 
         static::assertSame($expected, $result);
     }

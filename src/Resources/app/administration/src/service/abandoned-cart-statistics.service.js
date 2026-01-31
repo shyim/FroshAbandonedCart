@@ -1,7 +1,11 @@
 const ApiService = Shopware.Classes.ApiService;
 
 class AbandonedCartStatisticsService extends ApiService {
-    constructor(httpClient, loginService, apiEndpoint = 'frosh-abandoned-cart') {
+    constructor(
+        httpClient,
+        loginService,
+        apiEndpoint = 'frosh-abandoned-cart'
+    ) {
         super(httpClient, loginService, apiEndpoint);
         this.name = 'froshAbandonedCartStatisticsService';
     }
