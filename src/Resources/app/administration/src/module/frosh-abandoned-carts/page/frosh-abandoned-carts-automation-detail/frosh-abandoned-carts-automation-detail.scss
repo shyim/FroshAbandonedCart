@@ -1,0 +1,71 @@
+.frosh-abandoned-carts-automation-detail {
+    &__conditions,
+    &__actions {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    &__condition-row,
+    &__action-row {
+        padding: 16px;
+        background-color: var(--color-background-secondary-default);
+        border-radius: 4px;
+    }
+
+    &__condition-config,
+    &__action-config {
+        flex: 1;
+    }
+
+    &__test-results {
+        padding: 16px 0;
+    }
+
+    &__test-summary {
+        margin-bottom: 20px;
+        padding: 12px 16px;
+        background-color: #f9fafb;
+        border-radius: 4px;
+    }
+
+    &__test-matching {
+        h4 {
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+    }
+
+    &__test-table {
+        width: 100%;
+        border-collapse: collapse;
+
+        th,
+        td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        th {
+            font-weight: 600;
+            background-color: #f9fafb;
+        }
+
+        tr:hover td {
+            background-color: #f3f4f6;
+        }
+
+        small {
+            color: #6b7280;
+        }
+    }
+
+    &__test-no-match {
+        padding: 24px;
+        text-align: center;
+        color: #6b7280;
+        background-color: #f9fafb;
+        border-radius: 4px;
+    }
+}

@@ -1,0 +1,129 @@
+{
+    "sw-privileges": {
+        "additional_permissions": {
+            "frosh_abandoned_carts": {
+                "label": "Abgebrochene Warenkörbe"
+            }
+        }
+    },
+    "frosh-abandoned-carts": {
+        "general": {
+            "title": "Abgebrochene Warenkörbe",
+            "description": "Abgebrochene Warenkörbe von Kunden anzeigen",
+            "overview": "Übersicht",
+            "statistics": "Statistiken",
+            "automations": "Automatisierungen"
+        },
+        "list": {
+            "title": "Abgebrochene Warenkörbe",
+            "columnCustomer": "Kunde",
+            "columnTotalPrice": "Gesamtpreis",
+            "columnSalesChannel": "Verkaufskanal",
+            "columnCreatedAt": "Erstellt am",
+            "columnUpdatedAt": "Aktualisiert am",
+            "emptyStateTitle": "Keine abgebrochenen Warenkörbe gefunden",
+            "refresh": "Aktualisieren",
+            "filterSalesChannel": "Verkaufskanal",
+            "filterSalesChannelPlaceholder": "Verkaufskanal auswählen...",
+            "filterCustomer": "Kunde",
+            "filterCustomerPlaceholder": "Kunde auswählen..."
+        },
+        "detail": {
+            "title": "Abgebrochener Warenkorb Details",
+            "cardTitleInfo": "Warenkorb Informationen",
+            "cardTitleLineItems": "Positionen",
+            "labelCustomer": "Kunde",
+            "labelTotalPrice": "Gesamtpreis",
+            "labelSalesChannel": "Verkaufskanal",
+            "labelCreatedAt": "Erstellt am",
+            "columnProduct": "Produkt",
+            "columnQuantity": "Menge",
+            "columnUnitPrice": "Einzelpreis",
+            "columnTotalPrice": "Gesamtpreis",
+            "unknownProduct": "Unbekanntes Produkt"
+        },
+        "statistics": {
+            "title": "Statistiken",
+            "totalCount": "Abgebrochene Warenkörbe gesamt",
+            "totalValue": "Gesamtwert",
+            "todayCount": "Warenkörbe heute",
+            "todayValue": "Wert heute",
+            "chartTitleCount": "Abgebrochene Warenkörbe im Zeitverlauf",
+            "chartTitleValue": "Wert abgebrochener Warenkörbe im Zeitverlauf",
+            "chartLabelCount": "Abgebrochene Warenkörbe",
+            "chartLabelValue": "Wert",
+            "emptyStateTitle": "Keine Daten zu abgebrochenen Warenkörben verfügbar",
+            "dateRanges": {
+                "30Days": "Letzte 30 Tage",
+                "14Days": "Letzte 14 Tage",
+                "7Days": "Letzte 7 Tage"
+            }
+        },
+        "automations": {
+            "title": "Automatisierungen",
+            "createButton": "Automatisierung erstellen",
+            "emptyState": "Noch keine Automatisierungen konfiguriert",
+            "columns": {
+                "name": "Name",
+                "active": "Aktiv",
+                "conditions": "Bedingungen",
+                "actions": "Aktionen",
+                "salesChannel": "Verkaufskanal",
+                "createdAt": "Erstellt"
+            },
+            "detail": {
+                "title": "Automatisierung",
+                "newTitle": "Neue Automatisierung",
+                "generalCard": "Allgemeine Einstellungen",
+                "conditionsCard": "Bedingungen",
+                "actionsCard": "Aktionen",
+                "nameLabel": "Name",
+                "namePlaceholder": "Automatisierungsname eingeben",
+                "activeLabel": "Aktiv",
+                "priorityLabel": "Priorität",
+                "priorityHelpText": "Automatisierungen mit höherer Priorität werden zuerst ausgeführt",
+                "salesChannelLabel": "Verkaufskanal",
+                "salesChannelPlaceholder": "Alle Verkaufskanäle",
+                "addCondition": "Bedingung hinzufügen",
+                "addAction": "Aktion hinzufügen",
+                "conditionType": "Bedingungstyp",
+                "actionType": "Aktionstyp",
+                "operator": "Operator",
+                "value": "Wert",
+                "unit": "Einheit",
+                "hours": "Stunden",
+                "days": "Tage",
+                "tagId": "Tag",
+                "negate": "Negieren (NICHT)",
+                "mailTemplateId": "E-Mail-Vorlage",
+                "promotionId": "Promotion",
+                "codePattern": "Code-Muster",
+                "customFieldName": "Zusatzfeld-Name",
+                "testButton": "Bedingungen testen",
+                "testModalTitle": "Testergebnisse",
+                "testMatchingCount": "{count} von {total} verlassenen Warenkörben entsprechen den Bedingungen",
+                "testMatchingCarts": "Passende Warenkörbe",
+                "testNoMatches": "Keine verlassenen Warenkörbe entsprechen den aktuellen Bedingungen.",
+                "testCustomer": "Kunde",
+                "testValue": "Wert",
+                "testCreatedAt": "Erstellt",
+                "testAutomationRuns": "Automatisierungsläufe"
+            },
+            "conditions": {
+                "cart_age": "Warenkorbsalter",
+                "cart_value": "Warenkorbwert",
+                "automation_count": "Automatisierungszähler",
+                "time_since_last_automation": "Zeit seit letzter Automatisierung",
+                "customer_tag": "Kunde hat Tag",
+                "line_item_count": "Anzahl Positionen"
+            },
+            "actions": {
+                "send_email": "E-Mail senden",
+                "generate_voucher": "Gutscheincode generieren",
+                "add_customer_tag": "Kunden-Tag hinzufügen",
+                "remove_customer_tag": "Kunden-Tag entfernen",
+                "set_customer_custom_field": "Kunden-Zusatzfeld setzen"
+            }
+        }
+    }
+}

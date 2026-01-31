@@ -1,0 +1,109 @@
+<?xml version="1.0" ?>
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+        <defaults autowire="true" autoconfigure="true"/>
+
+        <prototype namespace="Frosh\AbandonedCart\" resource="../../"
+                   exclude="../../{Entity,Migration,FroshAbandonedCart.php}"/>
+
+        <!-- Entity Definitions -->
+        <service id="Frosh\AbandonedCart\Entity\AbandonedCartDefinition">
+            <tag name="shopware.entity.definition"/>
+        </service>
+
+        <service id="Frosh\AbandonedCart\Entity\AbandonedCartLineItemDefinition">
+            <tag name="shopware.entity.definition"/>
+        </service>
+
+        <service id="Frosh\AbandonedCart\Entity\AbandonedCartAutomation\AbandonedCartAutomationDefinition">
+            <tag name="shopware.entity.definition"/>
+        </service>
+
+        <service id="Frosh\AbandonedCart\Entity\AbandonedCartAutomationLog\AbandonedCartAutomationLogDefinition">
+            <tag name="shopware.entity.definition"/>
+        </service>
+
+        <!-- Scheduled Tasks -->
+        <service id="Frosh\AbandonedCart\ScheduledTask\CartArchiverTask">
+            <tag name="shopware.scheduled.task"/>
+        </service>
+
+        <service id="Frosh\AbandonedCart\ScheduledTask\AbandonedCartAutomationTask">
+            <tag name="shopware.scheduled.task"/>
+        </service>
+
+        <!-- Automation Conditions -->
+        <service id="Frosh\AbandonedCart\Automation\Condition\CartAgeCondition">
+            <tag name="frosh.abandoned_cart.condition"/>
+        </service>
+
+        <service id="Frosh\AbandonedCart\Automation\Condition\CartValueCondition">
+            <tag name="frosh.abandoned_cart.condition"/>
+        </service>
+
+        <service id="Frosh\AbandonedCart\Automation\Condition\AutomationCountCondition">
+            <tag name="frosh.abandoned_cart.condition"/>
+        </service>
+
+        <service id="Frosh\AbandonedCart\Automation\Condition\CustomerTagCondition">
+            <tag name="frosh.abandoned_cart.condition"/>
+        </service>
+
+        <service id="Frosh\AbandonedCart\Automation\Condition\TimeSinceLastAutomationCondition">
+            <tag name="frosh.abandoned_cart.condition"/>
+        </service>
+
+        <service id="Frosh\AbandonedCart\Automation\Condition\LineItemCountCondition">
+            <tag name="frosh.abandoned_cart.condition"/>
+        </service>
+
+        <!-- Automation Actions -->
+        <service id="Frosh\AbandonedCart\Automation\Action\SendEmailAction">
+            <tag name="frosh.abandoned_cart.action"/>
+        </service>
+
+        <service id="Frosh\AbandonedCart\Automation\Action\AddCustomerTagAction">
+            <tag name="frosh.abandoned_cart.action"/>
+        </service>
+
+        <service id="Frosh\AbandonedCart\Automation\Action\RemoveCustomerTagAction">
+            <tag name="frosh.abandoned_cart.action"/>
+        </service>
+
+        <service id="Frosh\AbandonedCart\Automation\Action\SetCustomerCustomFieldAction">
+            <tag name="frosh.abandoned_cart.action"/>
+        </service>
+
+        <service id="Frosh\AbandonedCart\Automation\Action\GenerateVoucherAction">
+            <tag name="frosh.abandoned_cart.action"/>
+        </service>
+
+        <!-- Automation Processor -->
+        <service id="Frosh\AbandonedCart\Automation\AutomationProcessor">
+            <argument type="service" id="frosh_abandoned_cart_automation.repository"/>
+            <argument type="service" id="frosh_abandoned_cart.repository"/>
+            <argument type="service" id="frosh_abandoned_cart_automation_log.repository"/>
+            <argument type="tagged_iterator" tag="frosh.abandoned_cart.condition"/>
+            <argument type="tagged_iterator" tag="frosh.abandoned_cart.action"/>
+            <argument type="service" id="logger"/>
+        </service>
+
+        <!-- Automation Test Controller -->
+        <service id="Frosh\AbandonedCart\Controller\Api\AbandonedCartAutomationTestController">
+            <argument type="service" id="frosh_abandoned_cart.repository"/>
+            <argument type="tagged_iterator" tag="frosh.abandoned_cart.condition"/>
+        </service>
+
+        <!-- Demodata Generator -->
+        <service id="Frosh\AbandonedCart\Demodata\AbandonedCartGenerator">
+            <argument type="service" id="Shopware\Core\Framework\DataAbstractionLayer\Write\EntityWriter"/>
+            <argument type="service" id="Frosh\AbandonedCart\Entity\AbandonedCartDefinition"/>
+            <argument type="service" id="Doctrine\DBAL\Connection"/>
+            <argument type="service" id="product.repository"/>
+            <tag name="shopware.demodata_generator" option-name="abandoned-carts" option-default="100"/>
+        </service>
+    </services>
+</container>

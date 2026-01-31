@@ -1,0 +1,100 @@
+{% block frosh_abandoned_carts_list %}
+<sw-page class="frosh-abandoned-carts-list">
+    {% block frosh_abandoned_carts_list_smart_bar_header %}
+    <template #smart-bar-header>
+        <h2>
+            {{ $tc('frosh-abandoned-carts.list.title') }}
+            <span
+                v-if="!isLoading"
+                class="sw-page__smart-bar-amount"
+            >
+                ({{ total }})
+            </span>
+        </h2>
+    </template>
+    {% endblock %}
+
+    {% block frosh_abandoned_carts_list_content %}
+    <template #content>
+        <div class="frosh-abandoned-carts-list__content">
+            {% block frosh_abandoned_carts_list_empty_state %}
+            <sw-empty-state
+                v-if="!isLoading && !total"
+                :title="$tc('frosh-abandoned-carts.list.emptyStateTitle')"
+            />
+            {% endblock %}
+
+            {% block frosh_abandoned_carts_list_grid %}
+            <sw-entity-listing
+                v-else
+                :repository="abandonedCartRepository"
+                :items="abandonedCarts"
+                :columns="columns"
+                :isLoading="isLoading"
+                :allowEdit="false"
+                :allowDelete="false"
+                :allowInlineEdit="false"
+                :disableDataFetching="true"
+                :sortBy="sortBy"
+                :sortDirection="sortDirection"
+                detailRoute="frosh.abandoned.carts.detail"
+                @page-change="onPageChange"
+                @column-sort="onSortColumn"
+            >
+                {% block frosh_abandoned_carts_list_column_customer %}
+                <template #column-customer.email="{ item }">
+                    <router-link :to="{ name: 'frosh.abandoned.carts.detail', params: { id: item.id } }">
+                        {{ getCustomerName(item) }}
+                    </router-link>
+                </template>
+                {% endblock %}
+
+                {% block frosh_abandoned_carts_list_column_total_price %}
+                <template #column-totalPrice="{ item }">
+                    {{ formatPrice(item.totalPrice, item.currencyIsoCode) }}
+                </template>
+                {% endblock %}
+
+                {% block frosh_abandoned_carts_list_column_sales_channel %}
+                <template #column-salesChannel.name="{ item }">
+                    {{ item.salesChannel ? item.salesChannel.name : '-' }}
+                </template>
+                {% endblock %}
+
+                {% block frosh_abandoned_carts_list_column_created_at %}
+                <template #column-createdAt="{ item }">
+                    <sw-time-ago :date="item.createdAt" />
+                </template>
+                {% endblock %}
+            </sw-entity-listing>
+            {% endblock %}
+        </div>
+    </template>
+    {% endblock %}
+
+    {% block frosh_abandoned_carts_list_sidebar %}
+    <template #sidebar>
+        <sw-sidebar class="frosh-abandoned-carts-list__sidebar">
+            {% block frosh_abandoned_carts_list_sidebar_refresh %}
+            <sw-sidebar-item
+                icon="regular-undo"
+                :title="$tc('frosh-abandoned-carts.list.refresh')"
+                @click="onRefresh"
+            />
+            {% endblock %}
+
+            {% block frosh_abandoned_carts_list_sidebar_filter %}
+            <sw-sidebar-filter-panel
+                entity="frosh_abandoned_cart"
+                :store-key="storeKey"
+                :filters="listFilters"
+                :defaults="defaultFilters"
+                :active-filter-number="activeFilterNumber"
+                @criteria-changed="updateCriteria"
+            />
+            {% endblock %}
+        </sw-sidebar>
+    </template>
+    {% endblock %}
+</sw-page>
+{% endblock %}

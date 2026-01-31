@@ -1,0 +1,123 @@
+{% block frosh_abandoned_carts_statistics %}
+<sw-page class="frosh-abandoned-carts-statistics">
+    {% block frosh_abandoned_carts_statistics_smart_bar_header %}
+    <template #smart-bar-header>
+        <h2>{{ $tc('frosh-abandoned-carts.statistics.title') }}</h2>
+    </template>
+    {% endblock %}
+
+    {% block frosh_abandoned_carts_statistics_content %}
+    <template #content>
+        <template v-if="isLoading">
+            <sw-skeleton variant="detail" />
+            <sw-skeleton variant="detail" />
+        </template>
+
+        <template v-else>
+            {% block frosh_abandoned_carts_statistics_summary %}
+            <div class="frosh-abandoned-carts-statistics__summary">
+                <mt-card position-identifier="frosh-abandoned-carts-statistics-summary">
+                    <div class="frosh-abandoned-carts-statistics__summary-grid">
+                        {% block frosh_abandoned_carts_statistics_summary_total_count %}
+                        <div class="frosh-abandoned-carts-statistics__summary-item">
+                            <span class="frosh-abandoned-carts-statistics__summary-label">
+                                {{ $tc('frosh-abandoned-carts.statistics.totalCount') }}
+                            </span>
+                            <span class="frosh-abandoned-carts-statistics__summary-value">
+                                {{ totalCount }}
+                            </span>
+                        </div>
+                        {% endblock %}
+
+                        {% block frosh_abandoned_carts_statistics_summary_total_value %}
+                        <div class="frosh-abandoned-carts-statistics__summary-item">
+                            <span class="frosh-abandoned-carts-statistics__summary-label">
+                                {{ $tc('frosh-abandoned-carts.statistics.totalValue') }}
+                            </span>
+                            <span class="frosh-abandoned-carts-statistics__summary-value">
+                                {{ formatPrice(totalValue) }}
+                            </span>
+                        </div>
+                        {% endblock %}
+
+                        {% block frosh_abandoned_carts_statistics_summary_today_count %}
+                        <div class="frosh-abandoned-carts-statistics__summary-item">
+                            <span class="frosh-abandoned-carts-statistics__summary-label">
+                                {{ $tc('frosh-abandoned-carts.statistics.todayCount') }}
+                            </span>
+                            <span class="frosh-abandoned-carts-statistics__summary-value">
+                                {{ todayCount }}
+                            </span>
+                        </div>
+                        {% endblock %}
+
+                        {% block frosh_abandoned_carts_statistics_summary_today_value %}
+                        <div class="frosh-abandoned-carts-statistics__summary-item">
+                            <span class="frosh-abandoned-carts-statistics__summary-label">
+                                {{ $tc('frosh-abandoned-carts.statistics.todayValue') }}
+                            </span>
+                            <span class="frosh-abandoned-carts-statistics__summary-value">
+                                {{ formatPrice(todayValue) }}
+                            </span>
+                        </div>
+                        {% endblock %}
+                    </div>
+                </mt-card>
+            </div>
+            {% endblock %}
+
+            {% block frosh_abandoned_carts_statistics_charts %}
+            <template v-if="hasData">
+                {% block frosh_abandoned_carts_statistics_chart_count %}
+                <sw-chart-card
+                    class="frosh-abandoned-carts-statistics__chart-count"
+                    :available-ranges="availableRanges"
+                    :card-subtitle="getCardSubtitle(countDateRange)"
+                    :series="countSeries"
+                    :options="chartOptionsCount"
+                    :fill-empty-values="'day'"
+                    :card-title="$tc('frosh-abandoned-carts.statistics.chartTitleCount')"
+                    type="line"
+                    sort
+                    position-identifier="frosh-abandoned-carts-statistics-chart-count"
+                    @sw-chart-card-range-update="onCountRangeUpdate"
+                >
+                    <template #range-option="{ range }">
+                        {{ $tc(`frosh-abandoned-carts.statistics.dateRanges.${range}`) }}
+                    </template>
+                </sw-chart-card>
+                {% endblock %}
+
+                {% block frosh_abandoned_carts_statistics_chart_value %}
+                <sw-chart-card
+                    class="frosh-abandoned-carts-statistics__chart-value"
+                    :available-ranges="availableRanges"
+                    :card-subtitle="getCardSubtitle(valueDateRange)"
+                    :series="valueSeries"
+                    :options="chartOptionsValue"
+                    :fill-empty-values="'day'"
+                    :card-title="$tc('frosh-abandoned-carts.statistics.chartTitleValue')"
+                    type="line"
+                    sort
+                    position-identifier="frosh-abandoned-carts-statistics-chart-value"
+                    @sw-chart-card-range-update="onValueRangeUpdate"
+                >
+                    <template #range-option="{ range }">
+                        {{ $tc(`frosh-abandoned-carts.statistics.dateRanges.${range}`) }}
+                    </template>
+                </sw-chart-card>
+                {% endblock %}
+            </template>
+
+            {% block frosh_abandoned_carts_statistics_empty_state %}
+            <sw-empty-state
+                v-else
+                :title="$tc('frosh-abandoned-carts.statistics.emptyStateTitle')"
+            />
+            {% endblock %}
+            {% endblock %}
+        </template>
+    </template>
+    {% endblock %}
+</sw-page>
+{% endblock %}

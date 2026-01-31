@@ -1,0 +1,77 @@
+store:
+    availabilities:
+        - German
+        - International
+    default_locale: en_GB
+    localizations:
+        - de_DE
+        - en_GB
+    categories:
+        - Conversion
+    type: extension
+    icon: src/Resources/store/icon.png
+    automatic_bugfix_version_compatibility: true
+    description:
+        de: file:src/Resources/store/de.md
+        en: file:src/Resources/store/en.md
+    installation_manual:
+        de: file:src/Resources/store/de_manual.md
+        en: file:src/Resources/store/en_manual.md
+    tags:
+        de:
+            - Warenkorb
+            - Abgebrochener Warenkorb
+            - E-Mail Marketing
+            - Automation
+            - Conversion
+        en:
+            - cart
+            - abandoned cart
+            - email marketing
+            - automation
+            - conversion
+    videos:
+        de: []
+        en: []
+    highlights:
+        de:
+            - Automatische Warenkorbsicherung
+            - Flexible Automationsregeln
+            - E-Mail mit Gutscheincode versenden
+        en:
+            - Automatic cart archiving
+            - Flexible automation rules
+            - Send emails with voucher codes
+    features:
+        de:
+            - Speichert abgebrochene Warenkörbe automatisch
+            - Stellt Warenkörbe bei Kundenanmeldung wieder her
+            - Konfigurierbare Bedingungen (Warenkorbwert, Alter, etc.)
+            - Automatische E-Mail-Benachrichtigungen
+            - Gutscheincode-Generierung
+            - Kunden-Tagging
+            - Statistik-Dashboard
+            - Test-Modus für Automationen
+        en:
+            - Automatically stores abandoned carts
+            - Restores carts on customer login
+            - Configurable conditions (cart value, age, etc.)
+            - Automatic email notifications
+            - Voucher code generation
+            - Customer tagging
+            - Statistics dashboard
+            - Test mode for automations
+    faq:
+        de: []
+        en: []
+    images: []
+
+build:
+    zip:
+        assets:
+            enable_es_build_for_admin: true
+            enable_es_build_for_storefront: false
+            npm_strict: true
+
+changelog:
+    enabled: true

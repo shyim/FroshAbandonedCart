@@ -1,0 +1,100 @@
+{% block frosh_abandoned_carts_automation_list %}
+<sw-page class="frosh-abandoned-carts-automation-list">
+    {% block frosh_abandoned_carts_automation_list_smart_bar_header %}
+    <template #smart-bar-header>
+        <h2>
+            {{ $tc('frosh-abandoned-carts.automations.title') }}
+            <span
+                v-if="!isLoading && automations"
+                class="sw-page__smart-bar-amount"
+            >
+                ({{ automations.total }})
+            </span>
+        </h2>
+    </template>
+    {% endblock %}
+
+    {% block frosh_abandoned_carts_automation_list_smart_bar_actions %}
+    <template #smart-bar-actions>
+        <mt-button
+            variant="primary"
+            @click="$router.push({ name: 'frosh.abandoned.carts.automation.create' })"
+        >
+            {{ $tc('frosh-abandoned-carts.automations.createButton') }}
+        </mt-button>
+    </template>
+    {% endblock %}
+
+    {% block frosh_abandoned_carts_automation_list_content %}
+    <template #content>
+        <div class="frosh-abandoned-carts-automation-list__content">
+            {% block frosh_abandoned_carts_automation_list_empty_state %}
+            <sw-empty-state
+                v-if="!isLoading && (!automations || automations.total === 0)"
+                :title="$tc('frosh-abandoned-carts.automations.emptyState')"
+            />
+            {% endblock %}
+
+            {% block frosh_abandoned_carts_automation_list_grid %}
+            <sw-entity-listing
+                v-else
+                :repository="automationRepository"
+                :items="automations"
+                :columns="columns"
+                :isLoading="isLoading"
+                :allowEdit="true"
+                :allowDelete="true"
+                :allowInlineEdit="false"
+                :disableDataFetching="true"
+                :sortBy="sortBy"
+                :sortDirection="sortDirection"
+                detailRoute="frosh.abandoned.carts.automation.detail"
+                @delete-item="onDelete"
+            >
+                {% block frosh_abandoned_carts_automation_list_column_name %}
+                <template #column-name="{ item }">
+                    <router-link :to="{ name: 'frosh.abandoned.carts.automation.detail', params: { id: item.id } }">
+                        {{ item.name }}
+                    </router-link>
+                </template>
+                {% endblock %}
+
+                {% block frosh_abandoned_carts_automation_list_column_active %}
+                <template #column-active="{ item }">
+                    <mt-switch
+                        :checked="item.active"
+                        @change="onToggleActive(item)"
+                    />
+                </template>
+                {% endblock %}
+
+                {% block frosh_abandoned_carts_automation_list_column_conditions %}
+                <template #column-conditions="{ item }">
+                    {{ getConditionsSummary(item) }}
+                </template>
+                {% endblock %}
+
+                {% block frosh_abandoned_carts_automation_list_column_actions %}
+                <template #column-actions="{ item }">
+                    {{ getActionsSummary(item) }}
+                </template>
+                {% endblock %}
+
+                {% block frosh_abandoned_carts_automation_list_column_sales_channel %}
+                <template #column-salesChannel.name="{ item }">
+                    {{ item.salesChannel ? item.salesChannel.name : $tc('frosh-abandoned-carts.automations.detail.salesChannelPlaceholder') }}
+                </template>
+                {% endblock %}
+
+                {% block frosh_abandoned_carts_automation_list_column_created_at %}
+                <template #column-createdAt="{ item }">
+                    <sw-time-ago :date="item.createdAt" />
+                </template>
+                {% endblock %}
+            </sw-entity-listing>
+            {% endblock %}
+        </div>
+    </template>
+    {% endblock %}
+</sw-page>
+{% endblock %}

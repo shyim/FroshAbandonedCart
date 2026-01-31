@@ -1,0 +1,45 @@
+.frosh-abandoned-carts-statistics {
+    &__summary {
+        margin-bottom: 24px;
+    }
+
+    &__summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 24px;
+
+        @media (max-width: 1200px) {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        @media (max-width: 600px) {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    &__summary-item {
+        display: flex;
+        flex-direction: column;
+        padding: 16px;
+        background-color: var(--color-background-primary-default);
+        border-radius: 8px;
+        border: 1px solid var(--color-border-primary-default);
+    }
+
+    &__summary-label {
+        font-size: 14px;
+        color: var(--color-text-secondary-default);
+        margin-bottom: 8px;
+    }
+
+    &__summary-value {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--color-text-primary-default);
+    }
+
+    &__chart-count,
+    &__chart-value {
+        margin-bottom: 24px;
+    }
+}

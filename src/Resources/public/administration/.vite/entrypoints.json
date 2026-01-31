@@ -1,0 +1,23 @@
+{
+  "base": "/bundles/froshcartarchiver/administration/",
+  "entryPoints": {
+    "frosh-cart-archiver": {
+      "css": [],
+      "dynamic": [],
+      "js": [
+        "/bundles/froshcartarchiver/administration/assets/frosh-cart-archiver-Dn1UO-ou.js"
+      ],
+      "legacy": false,
+      "preload": []
+    }
+  },
+  "legacy": false,
+  "metadatas": {},
+  "version": [
+    "7.1.0",
+    7,
+    1,
+    0
+  ],
+  "viteServer": null
+}

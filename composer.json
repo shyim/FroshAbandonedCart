@@ -1,0 +1,44 @@
+{
+    "name": "frosh/abandoned-cart",
+    "description": "Stores abandoned carts and restores them on customer login",
+    "version": "1.0.0",
+    "type": "shopware-platform-plugin",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "FriendsOfShopware"
+        }
+    ],
+    "require": {
+        "shopware/core": "~6.6.0 || ~6.7.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Frosh\\AbandonedCart\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Frosh\\AbandonedCart\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "shopware-plugin-class": "Frosh\\AbandonedCart\\FroshAbandonedCart",
+        "label": {
+            "de-DE": "Abandoned Cart",
+            "en-GB": "Abandoned Cart"
+        },
+        "description": {
+            "de-DE": "Speichert abgebrochene Warenkörbe und stellt sie bei Kundenanmeldung wieder her",
+            "en-GB": "Stores abandoned carts and restores them on customer login"
+        },
+        "manufacturerLink": {
+            "de-DE": "https://friendsofshopware.com",
+            "en-GB": "https://friendsofshopware.com"
+        },
+        "supportLink": {
+            "de-DE": "https://github.com/FriendsOfShopware/FroshAbandonedCart",
+            "en-GB": "https://github.com/FriendsOfShopware/FroshAbandonedCart"
+        }
+    }
+}

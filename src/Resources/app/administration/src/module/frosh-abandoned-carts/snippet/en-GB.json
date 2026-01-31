@@ -1,0 +1,129 @@
+{
+    "sw-privileges": {
+        "additional_permissions": {
+            "frosh_abandoned_carts": {
+                "label": "Abandoned Carts"
+            }
+        }
+    },
+    "frosh-abandoned-carts": {
+        "general": {
+            "title": "Abandoned Carts",
+            "description": "View abandoned carts from customers",
+            "overview": "Overview",
+            "statistics": "Statistics",
+            "automations": "Automations"
+        },
+        "list": {
+            "title": "Abandoned Carts",
+            "columnCustomer": "Customer",
+            "columnTotalPrice": "Total Price",
+            "columnSalesChannel": "Sales Channel",
+            "columnCreatedAt": "Created At",
+            "columnUpdatedAt": "Updated At",
+            "emptyStateTitle": "No abandoned carts found",
+            "refresh": "Refresh",
+            "filterSalesChannel": "Sales Channel",
+            "filterSalesChannelPlaceholder": "Select sales channel...",
+            "filterCustomer": "Customer",
+            "filterCustomerPlaceholder": "Select customer..."
+        },
+        "detail": {
+            "title": "Abandoned Cart Details",
+            "cardTitleInfo": "Cart Information",
+            "cardTitleLineItems": "Line Items",
+            "labelCustomer": "Customer",
+            "labelTotalPrice": "Total Price",
+            "labelSalesChannel": "Sales Channel",
+            "labelCreatedAt": "Created At",
+            "columnProduct": "Product",
+            "columnQuantity": "Quantity",
+            "columnUnitPrice": "Unit Price",
+            "columnTotalPrice": "Total Price",
+            "unknownProduct": "Unknown Product"
+        },
+        "statistics": {
+            "title": "Statistics",
+            "totalCount": "Total Abandoned Carts",
+            "totalValue": "Total Value",
+            "todayCount": "Carts Today",
+            "todayValue": "Value Today",
+            "chartTitleCount": "Abandoned Carts Over Time",
+            "chartTitleValue": "Abandoned Cart Value Over Time",
+            "chartLabelCount": "Abandoned Carts",
+            "chartLabelValue": "Value",
+            "emptyStateTitle": "No abandoned cart data available",
+            "dateRanges": {
+                "30Days": "Last 30 days",
+                "14Days": "Last 14 days",
+                "7Days": "Last 7 days"
+            }
+        },
+        "automations": {
+            "title": "Automations",
+            "createButton": "Create automation",
+            "emptyState": "No automations configured yet",
+            "columns": {
+                "name": "Name",
+                "active": "Active",
+                "conditions": "Conditions",
+                "actions": "Actions",
+                "salesChannel": "Sales Channel",
+                "createdAt": "Created"
+            },
+            "detail": {
+                "title": "Automation",
+                "newTitle": "New Automation",
+                "generalCard": "General Settings",
+                "conditionsCard": "Conditions",
+                "actionsCard": "Actions",
+                "nameLabel": "Name",
+                "namePlaceholder": "Enter automation name",
+                "activeLabel": "Active",
+                "priorityLabel": "Priority",
+                "priorityHelpText": "Higher priority automations run first",
+                "salesChannelLabel": "Sales Channel",
+                "salesChannelPlaceholder": "All sales channels",
+                "addCondition": "Add condition",
+                "addAction": "Add action",
+                "conditionType": "Condition type",
+                "actionType": "Action type",
+                "operator": "Operator",
+                "value": "Value",
+                "unit": "Unit",
+                "hours": "Hours",
+                "days": "Days",
+                "tagId": "Tag",
+                "negate": "Negate (NOT)",
+                "mailTemplateId": "Mail template",
+                "promotionId": "Promotion",
+                "codePattern": "Code pattern",
+                "customFieldName": "Custom field name",
+                "testButton": "Test Conditions",
+                "testModalTitle": "Test Results",
+                "testMatchingCount": "{count} of {total} abandoned carts match the conditions",
+                "testMatchingCarts": "Matching Carts",
+                "testNoMatches": "No abandoned carts match the current conditions.",
+                "testCustomer": "Customer",
+                "testValue": "Value",
+                "testCreatedAt": "Created",
+                "testAutomationRuns": "Automation Runs"
+            },
+            "conditions": {
+                "cart_age": "Cart Age",
+                "cart_value": "Cart Value",
+                "automation_count": "Automation Run Count",
+                "time_since_last_automation": "Time Since Last Automation",
+                "customer_tag": "Customer Has Tag",
+                "line_item_count": "Line Item Count"
+            },
+            "actions": {
+                "send_email": "Send Email",
+                "generate_voucher": "Generate Voucher Code",
+                "add_customer_tag": "Add Customer Tag",
+                "remove_customer_tag": "Remove Customer Tag",
+                "set_customer_custom_field": "Set Customer Custom Field"
+            }
+        }
+    }
+}
