@@ -7,11 +7,11 @@ namespace Frosh\AbandonedCart\Migration;
 use Doctrine\DBAL\Connection;
 use Shopware\Core\Framework\Migration\MigrationStep;
 
-class Migration1706800001FixAutomationLogTable extends MigrationStep
+class Migration1769869381FixAutomationLogTable extends MigrationStep
 {
     public function getCreationTimestamp(): int
     {
-        return 1706800001;
+        return 1769869381;
     }
 
     public function update(Connection $connection): void
