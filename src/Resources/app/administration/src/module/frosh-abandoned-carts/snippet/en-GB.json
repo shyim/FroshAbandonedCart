@@ -57,6 +57,13 @@
                 "30Days": "Last 30 days",
                 "14Days": "Last 14 days",
                 "7Days": "Last 7 days"
+            },
+            "topProducts": {
+                "title": "Top Products in Abandoned Carts",
+                "columnProduct": "Product",
+                "columnCartCount": "Carts",
+                "columnQuantity": "Total Quantity",
+                "columnValue": "Total Value"
             }
         },
         "automations": {

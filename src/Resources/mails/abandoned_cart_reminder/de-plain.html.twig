@@ -1,0 +1,26 @@
+Hallo {% if customer.salutation %}{{ customer.salutation.translated.displayName }} {% endif %}{{ customer.firstName }} {{ customer.lastName }},
+
+wir haben bemerkt, dass Sie einige Artikel in Ihrem Warenkorb zurückgelassen haben. Keine Sorge - wir haben sie für Sie aufbewahrt!
+
+Ihr Warenkorb enthält:
+
+{% for item in lineItems %}
+- {{ item.label }} (Menge: {{ item.quantity }}) - {{ item.totalPrice|currency(abandonedCart.currencyIsoCode) }}
+{% endfor %}
+
+Gesamt: {{ abandonedCart.totalPrice|currency(abandonedCart.currencyIsoCode) }}
+
+{% if voucherCode %}
+--------------------------------------------
+Spezielles Angebot nur für Sie!
+Verwenden Sie den Code: {{ voucherCode }}
+um einen Rabatt auf Ihre Bestellung zu erhalten!
+--------------------------------------------
+{% endif %}
+
+Besuchen Sie unseren Shop, um Ihre Bestellung abzuschließen.
+
+Bei Fragen stehen wir Ihnen gerne zur Verfügung.
+
+Mit freundlichen Grüßen,
+{{ salesChannel.name }}

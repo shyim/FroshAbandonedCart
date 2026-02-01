@@ -42,4 +42,14 @@
     &__chart-value {
         margin-bottom: 24px;
     }
+
+    &__top-products {
+        margin-top: 24px;
+    }
+
+    &__product-number {
+        display: block;
+        font-size: 12px;
+        color: var(--color-text-secondary-default);
+    }
 }

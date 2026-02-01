@@ -6,6 +6,12 @@ Shopware.Component.register('frosh-abandoned-carts-statistics', {
 
     inject: ['froshAbandonedCartStatisticsService'],
 
+    metaInfo() {
+        return {
+            title: this.$createTitle(),
+        };
+    },
+
     data() {
         return {
             isLoading: true,
@@ -15,6 +21,7 @@ Shopware.Component.register('frosh-abandoned-carts-statistics', {
             todayValue: 0,
             historyDataCount: null,
             historyDataValue: null,
+            topProducts: [],
             countDateRange: {
                 label: '30Days',
                 range: 30,
@@ -139,6 +146,39 @@ Shopware.Component.register('frosh-abandoned-carts-statistics', {
         hasData() {
             return this.historyDataCount && this.historyDataCount.length > 0;
         },
+
+        topProductsColumns() {
+            return [
+                {
+                    property: 'label',
+                    label: this.$tc(
+                        'frosh-abandoned-carts.statistics.topProducts.columnProduct'
+                    ),
+                    primary: true,
+                },
+                {
+                    property: 'count',
+                    label: this.$tc(
+                        'frosh-abandoned-carts.statistics.topProducts.columnCartCount'
+                    ),
+                    align: 'right',
+                },
+                {
+                    property: 'totalQuantity',
+                    label: this.$tc(
+                        'frosh-abandoned-carts.statistics.topProducts.columnQuantity'
+                    ),
+                    align: 'right',
+                },
+                {
+                    property: 'totalValue',
+                    label: this.$tc(
+                        'frosh-abandoned-carts.statistics.topProducts.columnValue'
+                    ),
+                    align: 'right',
+                },
+            ];
+        },
     },
 
     created() {
@@ -173,6 +213,7 @@ Shopware.Component.register('frosh-abandoned-carts-statistics', {
                 this.todayValue = data.todayValue;
                 this.historyDataCount = data.dailyStats;
                 this.historyDataValue = data.dailyStats;
+                this.topProducts = data.topProducts || [];
             } catch (error) {
                 console.error('Failed to load statistics:', error);
             } finally {

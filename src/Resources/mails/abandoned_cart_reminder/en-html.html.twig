@@ -1,0 +1,67 @@
+<div style="font-family:arial; font-size:12px;">
+    <p>
+        Hello {% if customer.salutation %}{{ customer.salutation.translated.displayName }} {% endif %}{{ customer.firstName }} {{ customer.lastName }},
+    </p>
+
+    <p>
+        We noticed you left some items in your shopping cart. Don't worry - we've saved them for you!
+    </p>
+
+    <p>
+        <strong>Your cart contains:</strong>
+    </p>
+
+    <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+        <thead>
+            <tr style="background-color: #f5f5f5;">
+                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Product</th>
+                <th style="padding: 10px; text-align: center; border-bottom: 1px solid #ddd;">Quantity</th>
+                <th style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">Price</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in lineItems %}
+            <tr>
+                <td style="padding: 10px; border-bottom: 1px solid #ddd;">{{ item.label }}</td>
+                <td style="padding: 10px; text-align: center; border-bottom: 1px solid #ddd;">{{ item.quantity }}</td>
+                <td style="padding: 10px; text-align: right; border-bottom: 1px solid #ddd;">{{ item.totalPrice|currency(abandonedCart.currencyIsoCode) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2" style="padding: 10px; text-align: right;"><strong>Total:</strong></td>
+                <td style="padding: 10px; text-align: right;"><strong>{{ abandonedCart.totalPrice|currency(abandonedCart.currencyIsoCode) }}</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    {% if voucherCode %}
+    <div style="background-color: #e8f5e9; border: 2px dashed #4caf50; padding: 20px; margin: 20px 0; text-align: center;">
+        <p style="margin: 0 0 10px 0; font-size: 14px;">
+            <strong>Special offer just for you!</strong>
+        </p>
+        <p style="margin: 0; font-size: 18px;">
+            Use code: <strong style="color: #2e7d32;">{{ voucherCode }}</strong>
+        </p>
+        <p style="margin: 10px 0 0 0; font-size: 12px; color: #666;">
+            to get a discount on your order!
+        </p>
+    </div>
+    {% endif %}
+
+    <p>
+        <a href="{{ rawUrl('frontend.home.page', {}, salesChannel.domains|first.url) }}" style="display: inline-block; background-color: #1976d2; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px;">
+            Complete Your Order
+        </a>
+    </p>
+
+    <p>
+        If you have any questions, feel free to contact us.
+    </p>
+
+    <p>
+        Best regards,<br/>
+        {{ salesChannel.name }}
+    </p>
+</div>

@@ -3,6 +3,12 @@ import template from './frosh-abandoned-carts-settings.html.twig';
 Shopware.Component.register('frosh-abandoned-carts-settings', {
     template,
 
+    metaInfo() {
+        return {
+            title: this.$createTitle(),
+        };
+    },
+
     data() {
         return {
             isLoading: false,

@@ -7,6 +7,12 @@ Shopware.Component.register('frosh-abandoned-carts-automation-list', {
 
     inject: ['repositoryFactory'],
 
+    metaInfo() {
+        return {
+            title: this.$createTitle(),
+        };
+    },
+
     data() {
         return {
             automations: null,

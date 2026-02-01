@@ -57,6 +57,13 @@
                 "30Days": "Letzte 30 Tage",
                 "14Days": "Letzte 14 Tage",
                 "7Days": "Letzte 7 Tage"
+            },
+            "topProducts": {
+                "title": "Top-Produkte in abgebrochenen Warenkörben",
+                "columnProduct": "Produkt",
+                "columnCartCount": "Warenkörbe",
+                "columnQuantity": "Gesamtmenge",
+                "columnValue": "Gesamtwert"
             }
         },
         "automations": {

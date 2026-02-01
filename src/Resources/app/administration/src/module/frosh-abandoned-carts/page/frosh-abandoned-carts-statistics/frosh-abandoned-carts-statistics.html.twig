@@ -144,6 +144,45 @@
             />
             {% endblock %}
             {% endblock %}
+
+            {% block frosh_abandoned_carts_statistics_top_products %}
+            <mt-card
+                v-if="topProducts.length > 0"
+                class="frosh-abandoned-carts-statistics__top-products"
+                position-identifier="frosh-abandoned-carts-statistics-top-products"
+                :title="$tc('frosh-abandoned-carts.statistics.topProducts.title')"
+            >
+                <template #grid>
+                    <sw-data-grid
+                        :data-source="topProducts"
+                        :columns="topProductsColumns"
+                        :show-selection="false"
+                        :show-actions="false"
+                        :is-record-selectable="() => false"
+                    >
+                        <template #column-label="{ item }">
+                            <router-link
+                                v-if="item.productId"
+                                :to="{ name: 'sw.product.detail', params: { id: item.productId } }"
+                            >
+                                {{ item.label }}
+                            </router-link>
+                            <span v-else>{{ item.label }}</span>
+                            <span
+                                v-if="item.productNumber"
+                                class="frosh-abandoned-carts-statistics__product-number"
+                            >
+                                {{ item.productNumber }}
+                            </span>
+                        </template>
+
+                        <template #column-totalValue="{ item }">
+                            {{ formatPrice(item.totalValue) }}
+                        </template>
+                    </sw-data-grid>
+                </template>
+            </mt-card>
+            {% endblock %}
         </template>
     </template>
     {% endblock %}

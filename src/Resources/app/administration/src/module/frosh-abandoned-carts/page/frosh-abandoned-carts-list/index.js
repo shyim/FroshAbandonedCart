@@ -10,6 +10,12 @@ Shopware.Component.register('frosh-abandoned-carts-list', {
 
     mixins: [Mixin.getByName('listing')],
 
+    metaInfo() {
+        return {
+            title: this.$createTitle(),
+        };
+    },
+
     data() {
         return {
             abandonedCarts: null,

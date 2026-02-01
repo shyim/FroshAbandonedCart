@@ -14,6 +14,12 @@ Shopware.Component.register('frosh-abandoned-carts-detail', {
         },
     },
 
+    metaInfo() {
+        return {
+            title: this.$createTitle(),
+        };
+    },
+
     data() {
         return {
             abandonedCart: null,
@@ -82,9 +88,11 @@ Shopware.Component.register('frosh-abandoned-carts-detail', {
             this.isLoading = true;
 
             try {
+                const context = { ...Shopware.Context.api, inheritance: true };
+
                 this.abandonedCart = await this.abandonedCartRepository.get(
                     this.abandonedCartId,
-                    Shopware.Context.api,
+                    context,
                     this.criteria
                 );
             } catch (error) {

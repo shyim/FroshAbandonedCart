@@ -1,0 +1,26 @@
+Hello {% if customer.salutation %}{{ customer.salutation.translated.displayName }} {% endif %}{{ customer.firstName }} {{ customer.lastName }},
+
+We noticed you left some items in your shopping cart. Don't worry - we've saved them for you!
+
+Your cart contains:
+
+{% for item in lineItems %}
+- {{ item.label }} (Qty: {{ item.quantity }}) - {{ item.totalPrice|currency(abandonedCart.currencyIsoCode) }}
+{% endfor %}
+
+Total: {{ abandonedCart.totalPrice|currency(abandonedCart.currencyIsoCode) }}
+
+{% if voucherCode %}
+--------------------------------------------
+Special offer just for you!
+Use code: {{ voucherCode }}
+to get a discount on your order!
+--------------------------------------------
+{% endif %}
+
+Visit our shop to complete your order.
+
+If you have any questions, feel free to contact us.
+
+Best regards,
+{{ salesChannel.name }}

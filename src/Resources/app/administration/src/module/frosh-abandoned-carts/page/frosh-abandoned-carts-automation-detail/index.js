@@ -16,6 +16,12 @@ Shopware.Component.register('frosh-abandoned-carts-automation-detail', {
         },
     },
 
+    metaInfo() {
+        return {
+            title: this.$createTitle(),
+        };
+    },
+
     data() {
         return {
             automation: null,
