@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Frosh\AbandonedCart\Tests\Unit\Automation\Condition;
 
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Frosh\AbandonedCart\Automation\Condition\TimeSinceLastAutomationCondition;
-use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -29,200 +30,68 @@ class TimeSinceLastAutomationConditionTest extends TestCase
         static::assertSame('time_since_last_automation', $this->condition->getType());
     }
 
-    public function testEvaluateReturnsTrueWhenLastAutomationAtIsNull(): void
+    #[DataProvider('operatorMappingDataProvider')]
+    public function testApplyWithDifferentOperators(string $operator, string $expectedSqlOperator): void
     {
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLastAutomationAt')->willReturn(null);
-
-        $result = $this->condition->evaluate($cart, ['operator' => '>=', 'value' => 24, 'unit' => 'hours'], $this->context);
-
-        static::assertTrue($result);
-    }
-
-    #[DataProvider('operatorDataProvider')]
-    public function testEvaluateWithDifferentOperators(
-        string $operator,
-        int $timeSinceLastAutomationInHours,
-        int $configValue,
-        bool $expected
-    ): void {
-        $lastAutomationAt = new \DateTimeImmutable(sprintf('-%d hours', $timeSinceLastAutomationInHours));
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLastAutomationAt')->willReturn($lastAutomationAt);
+        $query = $this->createQueryBuilder();
 
         $config = [
             'operator' => $operator,
-            'value' => $configValue,
+            'value' => 24,
             'unit' => 'hours',
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertSame($expected, $result);
+        $sql = $query->getSQL();
+        static::assertStringContainsString("cart.last_automation_at {$expectedSqlOperator}", $sql);
     }
 
     /**
-     * @return iterable<string, array{operator: string, timeSinceLastAutomationInHours: int, configValue: int, expected: bool}>
+     * @return iterable<string, array{operator: string, expectedSqlOperator: string}>
      */
-    public static function operatorDataProvider(): iterable
+    public static function operatorMappingDataProvider(): iterable
     {
-        // Greater than or equal (>=, gte)
-        yield 'gte operator - time since equals threshold' => [
+        // Time since >= X means last_automation_at <= threshold (was further in the past)
+        yield 'gte operator maps to <=' => [
             'operator' => '>=',
-            'timeSinceLastAutomationInHours' => 24,
-            'configValue' => 24,
-            'expected' => true,
+            'expectedSqlOperator' => '<=',
         ];
-        yield 'gte operator - time since greater than threshold' => [
-            'operator' => '>=',
-            'timeSinceLastAutomationInHours' => 48,
-            'configValue' => 24,
-            'expected' => true,
-        ];
-        yield 'gte operator - time since less than threshold' => [
-            'operator' => '>=',
-            'timeSinceLastAutomationInHours' => 12,
-            'configValue' => 24,
-            'expected' => false,
-        ];
-        yield 'gte alias - time since equals threshold' => [
+        yield 'gte alias maps to <=' => [
             'operator' => 'gte',
-            'timeSinceLastAutomationInHours' => 24,
-            'configValue' => 24,
-            'expected' => true,
+            'expectedSqlOperator' => '<=',
         ];
-
-        // Less than or equal (<=, lte)
-        yield 'lte operator - time since equals threshold' => [
+        yield 'lte operator maps to >=' => [
             'operator' => '<=',
-            'timeSinceLastAutomationInHours' => 24,
-            'configValue' => 24,
-            'expected' => true,
+            'expectedSqlOperator' => '>=',
         ];
-        yield 'lte operator - time since less than threshold' => [
-            'operator' => '<=',
-            'timeSinceLastAutomationInHours' => 12,
-            'configValue' => 24,
-            'expected' => true,
-        ];
-        yield 'lte operator - time since greater than threshold' => [
-            'operator' => '<=',
-            'timeSinceLastAutomationInHours' => 48,
-            'configValue' => 24,
-            'expected' => false,
-        ];
-        yield 'lte alias - time since equals threshold' => [
+        yield 'lte alias maps to >=' => [
             'operator' => 'lte',
-            'timeSinceLastAutomationInHours' => 24,
-            'configValue' => 24,
-            'expected' => true,
+            'expectedSqlOperator' => '>=',
         ];
-
-        // Equal (==, eq)
-        yield 'eq operator - time since equals threshold' => [
-            'operator' => '==',
-            'timeSinceLastAutomationInHours' => 24,
-            'configValue' => 24,
-            'expected' => true,
-        ];
-        yield 'eq operator - time since not equal to threshold' => [
-            'operator' => '==',
-            'timeSinceLastAutomationInHours' => 25,
-            'configValue' => 24,
-            'expected' => false,
-        ];
-        yield 'eq alias - time since equals threshold' => [
-            'operator' => 'eq',
-            'timeSinceLastAutomationInHours' => 24,
-            'configValue' => 24,
-            'expected' => true,
-        ];
-
-        // Not equal (!=, neq)
-        yield 'neq operator - time since not equal to threshold' => [
-            'operator' => '!=',
-            'timeSinceLastAutomationInHours' => 25,
-            'configValue' => 24,
-            'expected' => true,
-        ];
-        yield 'neq operator - time since equals threshold' => [
-            'operator' => '!=',
-            'timeSinceLastAutomationInHours' => 24,
-            'configValue' => 24,
-            'expected' => false,
-        ];
-        yield 'neq alias - time since not equal to threshold' => [
-            'operator' => 'neq',
-            'timeSinceLastAutomationInHours' => 25,
-            'configValue' => 24,
-            'expected' => true,
-        ];
-
-        // Greater than (>, gt)
-        yield 'gt operator - time since greater than threshold' => [
+        yield 'gt operator maps to <' => [
             'operator' => '>',
-            'timeSinceLastAutomationInHours' => 25,
-            'configValue' => 24,
-            'expected' => true,
+            'expectedSqlOperator' => '<',
         ];
-        yield 'gt operator - time since equals threshold' => [
-            'operator' => '>',
-            'timeSinceLastAutomationInHours' => 24,
-            'configValue' => 24,
-            'expected' => false,
-        ];
-        yield 'gt operator - time since less than threshold' => [
-            'operator' => '>',
-            'timeSinceLastAutomationInHours' => 23,
-            'configValue' => 24,
-            'expected' => false,
-        ];
-        yield 'gt alias - time since greater than threshold' => [
+        yield 'gt alias maps to <' => [
             'operator' => 'gt',
-            'timeSinceLastAutomationInHours' => 25,
-            'configValue' => 24,
-            'expected' => true,
+            'expectedSqlOperator' => '<',
         ];
-
-        // Less than (<, lt)
-        yield 'lt operator - time since less than threshold' => [
+        yield 'lt operator maps to >' => [
             'operator' => '<',
-            'timeSinceLastAutomationInHours' => 23,
-            'configValue' => 24,
-            'expected' => true,
+            'expectedSqlOperator' => '>',
         ];
-        yield 'lt operator - time since equals threshold' => [
-            'operator' => '<',
-            'timeSinceLastAutomationInHours' => 24,
-            'configValue' => 24,
-            'expected' => false,
-        ];
-        yield 'lt operator - time since greater than threshold' => [
-            'operator' => '<',
-            'timeSinceLastAutomationInHours' => 25,
-            'configValue' => 24,
-            'expected' => false,
-        ];
-        yield 'lt alias - time since less than threshold' => [
+        yield 'lt alias maps to >' => [
             'operator' => 'lt',
-            'timeSinceLastAutomationInHours' => 23,
-            'configValue' => 24,
-            'expected' => true,
+            'expectedSqlOperator' => '>',
         ];
     }
 
     #[DataProvider('unitDataProvider')]
-    public function testEvaluateWithDifferentUnits(
-        string $unit,
-        int $timeSinceInMinutes,
-        int $configValue,
-        bool $expected
-    ): void {
-        $lastAutomationAt = new \DateTimeImmutable(sprintf('-%d minutes', $timeSinceInMinutes));
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLastAutomationAt')->willReturn($lastAutomationAt);
+    public function testApplyWithDifferentUnits(string $unit, int $configValue, int $expectedSeconds): void
+    {
+        $query = $this->createQueryBuilder();
+        $beforeTime = new \DateTimeImmutable();
 
         $config = [
             'operator' => '>=',
@@ -230,96 +99,67 @@ class TimeSinceLastAutomationConditionTest extends TestCase
             'unit' => $unit,
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertSame($expected, $result);
+        // Get the parameter value
+        $params = $query->getParameters();
+        static::assertCount(1, $params);
+        $paramValue = array_values($params)[0];
+
+        // The threshold should be approximately now minus the expected seconds
+        $expectedThreshold = $beforeTime->modify("-{$expectedSeconds} seconds");
+        $actualThreshold = new \DateTimeImmutable($paramValue);
+
+        // Allow 2 seconds tolerance for test execution time
+        $diff = abs($expectedThreshold->getTimestamp() - $actualThreshold->getTimestamp());
+        static::assertLessThanOrEqual(2, $diff, "Threshold difference too large: {$diff} seconds");
     }
 
     /**
-     * @return iterable<string, array{unit: string, timeSinceInMinutes: int, configValue: int, expected: bool}>
+     * @return iterable<string, array{unit: string, configValue: int, expectedSeconds: int}>
      */
     public static function unitDataProvider(): iterable
     {
-        // Minutes
-        yield 'minutes - time since equals threshold' => [
+        yield 'minutes unit' => [
             'unit' => 'minutes',
-            'timeSinceInMinutes' => 30,
             'configValue' => 30,
-            'expected' => true,
+            'expectedSeconds' => 30 * 60,
         ];
-        yield 'minutes - time since greater than threshold' => [
-            'unit' => 'minutes',
-            'timeSinceInMinutes' => 45,
-            'configValue' => 30,
-            'expected' => true,
-        ];
-        yield 'minutes - time since less than threshold' => [
-            'unit' => 'minutes',
-            'timeSinceInMinutes' => 15,
-            'configValue' => 30,
-            'expected' => false,
-        ];
-
-        // Hours
-        yield 'hours - time since equals threshold' => [
+        yield 'hours unit' => [
             'unit' => 'hours',
-            'timeSinceInMinutes' => 120, // 2 hours
             'configValue' => 2,
-            'expected' => true,
+            'expectedSeconds' => 2 * 3600,
         ];
-        yield 'hours - time since greater than threshold' => [
-            'unit' => 'hours',
-            'timeSinceInMinutes' => 180, // 3 hours
-            'configValue' => 2,
-            'expected' => true,
-        ];
-        yield 'hours - time since less than threshold' => [
-            'unit' => 'hours',
-            'timeSinceInMinutes' => 60, // 1 hour
-            'configValue' => 2,
-            'expected' => false,
-        ];
-
-        // Days
-        yield 'days - time since equals threshold' => [
+        yield 'days unit' => [
             'unit' => 'days',
-            'timeSinceInMinutes' => 2880, // 2 days
             'configValue' => 2,
-            'expected' => true,
+            'expectedSeconds' => 2 * 86400,
         ];
-        yield 'days - time since greater than threshold' => [
-            'unit' => 'days',
-            'timeSinceInMinutes' => 4320, // 3 days
+        yield 'unknown unit defaults to hours' => [
+            'unit' => 'unknown',
             'configValue' => 2,
-            'expected' => true,
-        ];
-        yield 'days - time since less than threshold' => [
-            'unit' => 'days',
-            'timeSinceInMinutes' => 1440, // 1 day
-            'configValue' => 2,
-            'expected' => false,
+            'expectedSeconds' => 2 * 3600,
         ];
     }
 
-    public function testEvaluateWithDefaultValues(): void
+    public function testApplyWithDefaultValues(): void
     {
-        // Last automation was 25 hours ago - should pass default config (>= 24 hours)
-        $lastAutomationAt = new \DateTimeImmutable('-25 hours');
+        $query = $this->createQueryBuilder();
 
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLastAutomationAt')->willReturn($lastAutomationAt);
+        // Empty config should use defaults: operator >= , value 24, unit hours
+        $this->condition->apply($query, [], $this->context);
 
-        $result = $this->condition->evaluate($cart, [], $this->context);
+        $sql = $query->getSQL();
+        // >= maps to <=
+        static::assertStringContainsString('cart.last_automation_at <=', $sql);
 
-        static::assertTrue($result);
+        $params = $query->getParameters();
+        static::assertCount(1, $params);
     }
 
-    public function testEvaluateWithUnknownOperatorReturnsFalse(): void
+    public function testApplyWithUnknownOperatorDefaultsToLte(): void
     {
-        $lastAutomationAt = new \DateTimeImmutable('-25 hours');
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLastAutomationAt')->willReturn($lastAutomationAt);
+        $query = $this->createQueryBuilder();
 
         $config = [
             'operator' => 'invalid_operator',
@@ -327,54 +167,61 @@ class TimeSinceLastAutomationConditionTest extends TestCase
             'unit' => 'hours',
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertFalse($result);
+        $sql = $query->getSQL();
+        // unknown operator defaults to <=
+        static::assertStringContainsString('cart.last_automation_at <=', $sql);
     }
 
-    public function testEvaluateWithUnknownUnitDefaultsToHours(): void
+    public function testApplyHandlesNullLastAutomationAt(): void
     {
-        // Last automation was 25 hours ago with unknown unit - should default to hours
-        $lastAutomationAt = new \DateTimeImmutable('-25 hours');
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLastAutomationAt')->willReturn($lastAutomationAt);
+        $query = $this->createQueryBuilder();
 
         $config = [
             'operator' => '>=',
             'value' => 24,
-            'unit' => 'unknown_unit',
+            'unit' => 'hours',
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertTrue($result);
+        $sql = $query->getSQL();
+        // Should include IS NULL check for first automation
+        static::assertStringContainsString('cart.last_automation_at IS NULL', $sql);
+        static::assertStringContainsString('OR', $sql);
     }
 
-    public function testEvaluateFirstAutomationAlwaysPasses(): void
+    public function testApplyAddsWhereClauseWithParameter(): void
     {
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLastAutomationAt')->willReturn(null);
+        $query = $this->createQueryBuilder();
 
-        // Even with restrictive conditions, first automation should pass
         $config = [
             'operator' => '>=',
-            'value' => 1000,
-            'unit' => 'days',
+            'value' => 24,
+            'unit' => 'hours',
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertTrue($result);
+        $sql = $query->getSQL();
+        $params = $query->getParameters();
+
+        // Should have a WHERE clause
+        static::assertStringContainsString('WHERE', $sql);
+        static::assertStringContainsString('cart.last_automation_at', $sql);
+
+        // Should have exactly one parameter
+        static::assertCount(1, $params);
+
+        // Parameter should be a datetime string
+        $paramValue = array_values($params)[0];
+        static::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $paramValue);
     }
 
-    public function testEvaluateRateLimiting(): void
+    public function testApplyRateLimitingCondition(): void
     {
-        // Last automation was 1 hour ago
-        $lastAutomationAt = new \DateTimeImmutable('-1 hour');
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLastAutomationAt')->willReturn($lastAutomationAt);
+        $query = $this->createQueryBuilder();
 
         // Rate limit: must be at least 24 hours since last automation
         $config = [
@@ -383,28 +230,23 @@ class TimeSinceLastAutomationConditionTest extends TestCase
             'unit' => 'hours',
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertFalse($result);
+        $sql = $query->getSQL();
+        $params = $query->getParameters();
+
+        // Should check for NULL (first automation) OR time threshold
+        static::assertStringContainsString('cart.last_automation_at IS NULL OR cart.last_automation_at <=', $sql);
+        static::assertCount(1, $params);
     }
 
-    public function testEvaluateRateLimitingPasses(): void
+    private function createQueryBuilder(): QueryBuilder
     {
-        // Last automation was 25 hours ago
-        $lastAutomationAt = new \DateTimeImmutable('-25 hours');
+        $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+        $query = $connection->createQueryBuilder();
+        $query->select('cart.id')
+            ->from('frosh_abandoned_cart', 'cart');
 
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLastAutomationAt')->willReturn($lastAutomationAt);
-
-        // Rate limit: must be at least 24 hours since last automation
-        $config = [
-            'operator' => '>=',
-            'value' => 24,
-            'unit' => 'hours',
-        ];
-
-        $result = $this->condition->evaluate($cart, $config, $this->context);
-
-        static::assertTrue($result);
+        return $query;
     }
 }

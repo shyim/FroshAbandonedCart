@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Frosh\AbandonedCart\Automation\Condition;
 
-use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
+use Doctrine\DBAL\Query\QueryBuilder;
+use Shopware\Core\Framework\Context;
 
 class LineItemCountCondition implements ConditionInterface
 {
@@ -13,30 +14,26 @@ class LineItemCountCondition implements ConditionInterface
         return 'line_item_count';
     }
 
-    /**
-     * @param array<string, mixed> $config
-     */
-    public function evaluate(AbandonedCartEntity $cart, array $config, \Shopware\Core\Framework\Context $context): bool
+    public function apply(QueryBuilder $query, array $config, Context $context): void
     {
         $operator = $config['operator'] ?? '>=';
         $value = (int) ($config['value'] ?? 1);
 
-        $lineItems = $cart->getLineItems();
-        $count = $lineItems !== null ? $lineItems->count() : 0;
-
-        return $this->compare($count, $value, $operator);
-    }
-
-    private function compare(int $actual, int $expected, string $operator): bool
-    {
-        return match ($operator) {
-            '>=', 'gte' => $actual >= $expected,
-            '<=', 'lte' => $actual <= $expected,
-            '==', 'eq' => $actual === $expected,
-            '!=', 'neq' => $actual !== $expected,
-            '>', 'gt' => $actual > $expected,
-            '<', 'lt' => $actual < $expected,
-            default => false,
+        $sqlOperator = match ($operator) {
+            '>=', 'gte' => '>=',
+            '<=', 'lte' => '<=',
+            '>', 'gt' => '>',
+            '<', 'lt' => '<',
+            '==', 'eq' => '=',
+            '!=', 'neq' => '!=',
+            default => '>=',
         };
+
+        $paramName = 'line_item_count_' . uniqid();
+
+        $query->andWhere(
+            "(SELECT COUNT(*) FROM frosh_abandoned_cart_line_item WHERE abandoned_cart_id = cart.id) {$sqlOperator} :{$paramName}"
+        );
+        $query->setParameter($paramName, $value);
     }
 }

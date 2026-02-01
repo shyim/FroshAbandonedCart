@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Frosh\AbandonedCart\Automation;
 
+use Doctrine\DBAL\Connection;
 use Frosh\AbandonedCart\Automation\Action\ActionContext;
 use Frosh\AbandonedCart\Automation\Action\ActionInterface;
 use Frosh\AbandonedCart\Automation\Condition\ConditionInterface;
@@ -21,6 +22,8 @@ use Shopware\Core\Framework\Uuid\Uuid;
 
 class AutomationProcessor
 {
+    private const BATCH_SIZE = 500;
+
     /**
      * @var array<string, ConditionInterface>
      */
@@ -41,6 +44,7 @@ class AutomationProcessor
         private readonly EntityRepository $automationRepository,
         private readonly EntityRepository $abandonedCartRepository,
         private readonly EntityRepository $automationLogRepository,
+        private readonly Connection $connection,
         iterable $conditions,
         iterable $actions,
         private readonly LoggerInterface $logger,
@@ -64,92 +68,115 @@ class AutomationProcessor
             return;
         }
 
-        $carts = $this->loadAbandonedCarts($context);
-
-        if ($carts->count() === 0) {
-            $this->logger->debug('AutomationProcessor: No abandoned carts to process');
-
-            return;
-        }
-
-        $this->logger->info('AutomationProcessor: Processing abandoned carts', [
+        $this->logger->info('AutomationProcessor: Processing automations', [
             'automationCount' => $automations->count(),
-            'cartCount' => $carts->count(),
         ]);
 
-        foreach ($carts as $cart) {
-            $this->processCart($cart, $automations, $context);
+        foreach ($automations as $automation) {
+            $this->processAutomation($automation, $context);
         }
     }
 
-    private function processCart(AbandonedCartEntity $cart, AbandonedCartAutomationCollection $automations, Context $context): void
+    private function processAutomation(AbandonedCartAutomationEntity $automation, Context $context): void
     {
-        foreach ($automations as $automation) {
-            // Check if automation is applicable to this cart's sales channel
-            if ($automation->getSalesChannelId() !== null && $automation->getSalesChannelId() !== $cart->getSalesChannelId()) {
-                continue;
+        $offset = 0;
+
+        do {
+            $cartIds = $this->findMatchingCartIds($automation, $offset, $context);
+
+            if (empty($cartIds)) {
+                break;
             }
 
-            $conditions = $automation->getConditions();
-
-            if (!$this->evaluateConditions($cart, $conditions, $context)) {
-                continue;
-            }
-
-            // All conditions matched, execute actions
-            $this->logger->debug('AutomationProcessor: Automation matched', [
+            $this->logger->debug('AutomationProcessor: Found matching carts', [
                 'automationId' => $automation->getId(),
                 'automationName' => $automation->getName(),
-                'cartId' => $cart->getId(),
+                'cartCount' => \count($cartIds),
+                'offset' => $offset,
             ]);
 
-            try {
-                $results = $this->executeActions($cart, $automation, $context);
-                $this->logExecution($automation->getId(), $cart->getId(), $cart->getCustomerId(), 'success', $results, $context);
-                $this->updateCartAutomationStatus($cart, $context);
-            } catch (\Throwable $e) {
-                $this->logger->error('AutomationProcessor: Failed to execute actions', [
-                    'automationId' => $automation->getId(),
-                    'cartId' => $cart->getId(),
-                    'error' => $e->getMessage(),
-                ]);
-                $this->logExecution($automation->getId(), $cart->getId(), $cart->getCustomerId(), 'error', ['error' => $e->getMessage()], $context);
+            // Load full cart entities for action execution
+            $carts = $this->loadCartsById($cartIds, $context);
+
+            foreach ($carts as $cart) {
+                $this->executeAutomationForCart($cart, $automation, $context);
             }
 
-            // First matching automation wins (highest priority), stop processing
-            break;
-        }
+            $offset += self::BATCH_SIZE;
+        } while (\count($cartIds) === self::BATCH_SIZE);
     }
 
     /**
-     * @param array<int, array<string, mixed>> $conditionConfigs
+     * @return array<string>
      */
-    private function evaluateConditions(AbandonedCartEntity $cart, array $conditionConfigs, Context $context): bool
+    private function findMatchingCartIds(AbandonedCartAutomationEntity $automation, int $offset, Context $context): array
     {
-        // All conditions must match (AND logic)
-        foreach ($conditionConfigs as $conditionConfig) {
+        $query = $this->connection->createQueryBuilder();
+        $query->select('LOWER(HEX(cart.id)) as id')
+            ->from('frosh_abandoned_cart', 'cart')
+            ->setMaxResults(self::BATCH_SIZE)
+            ->setFirstResult($offset);
+
+        // Filter by sales channel if specified
+        if ($automation->getSalesChannelId() !== null) {
+            $query->andWhere('cart.sales_channel_id = :sales_channel_id');
+            $query->setParameter('sales_channel_id', Uuid::fromHexToBytes($automation->getSalesChannelId()));
+        }
+
+        // Apply all conditions
+        foreach ($automation->getConditions() as $conditionConfig) {
             $type = $conditionConfig['type'] ?? null;
 
             if ($type === null) {
-                $this->logger->warning('AutomationProcessor: Condition config missing type', ['config' => $conditionConfig]);
-
-                return false;
+                continue;
             }
 
             $handler = $this->conditionHandlers[$type] ?? null;
 
             if ($handler === null) {
-                $this->logger->warning('AutomationProcessor: No handler found for condition type', ['type' => $type]);
-
-                return false;
+                $this->logger->warning('AutomationProcessor: Unknown condition type', ['type' => $type]);
+                continue;
             }
 
-            if (!$handler->evaluate($cart, $conditionConfig, $context)) {
-                return false;
-            }
+            $handler->apply($query, $conditionConfig, $context);
         }
 
-        return true;
+        return $query->executeQuery()->fetchFirstColumn();
+    }
+
+    /**
+     * @param array<string> $cartIds
+     */
+    private function loadCartsById(array $cartIds, Context $context): AbandonedCartCollection
+    {
+        $criteria = new Criteria($cartIds);
+        $criteria->addAssociation('customer');
+        $criteria->addAssociation('salesChannel');
+        $criteria->addAssociation('lineItems');
+
+        return $this->abandonedCartRepository->search($criteria, $context)->getEntities();
+    }
+
+    private function executeAutomationForCart(AbandonedCartEntity $cart, AbandonedCartAutomationEntity $automation, Context $context): void
+    {
+        $this->logger->debug('AutomationProcessor: Executing automation', [
+            'automationId' => $automation->getId(),
+            'automationName' => $automation->getName(),
+            'cartId' => $cart->getId(),
+        ]);
+
+        try {
+            $results = $this->executeActions($cart, $automation, $context);
+            $this->logExecution($automation->getId(), $cart->getId(), $cart->getCustomerId(), 'success', $results, $context);
+            $this->updateCartAutomationStatus($cart, $context);
+        } catch (\Throwable $e) {
+            $this->logger->error('AutomationProcessor: Failed to execute actions', [
+                'automationId' => $automation->getId(),
+                'cartId' => $cart->getId(),
+                'error' => $e->getMessage(),
+            ]);
+            $this->logExecution($automation->getId(), $cart->getId(), $cart->getCustomerId(), 'error', ['error' => $e->getMessage()], $context);
+        }
     }
 
     /**
@@ -160,20 +187,18 @@ class AutomationProcessor
         $actionContext = new ActionContext($context);
         $results = [];
 
-        $actionConfigs = $automation->getActions();
-
-        foreach ($actionConfigs as $index => $actionConfig) {
+        foreach ($automation->getActions() as $index => $actionConfig) {
             $type = $actionConfig['type'] ?? null;
 
             if ($type === null) {
-                $this->logger->warning('AutomationProcessor: Action config missing type', ['config' => $actionConfig]);
+                $this->logger->warning('AutomationProcessor: Action missing type', ['config' => $actionConfig]);
                 continue;
             }
 
             $handler = $this->actionHandlers[$type] ?? null;
 
             if ($handler === null) {
-                $this->logger->warning('AutomationProcessor: No handler found for action type', ['type' => $type]);
+                $this->logger->warning('AutomationProcessor: Unknown action type', ['type' => $type]);
                 continue;
             }
 
@@ -181,7 +206,7 @@ class AutomationProcessor
                 $handler->execute($cart, $actionConfig, $actionContext);
                 $results["action_{$index}_{$type}"] = ['status' => 'success'];
             } catch (\Throwable $e) {
-                $this->logger->error('AutomationProcessor: Action execution failed', [
+                $this->logger->error('AutomationProcessor: Action failed', [
                     'type' => $type,
                     'error' => $e->getMessage(),
                 ]);
@@ -227,17 +252,5 @@ class AutomationProcessor
         $criteria->addSorting(new FieldSorting('priority', FieldSorting::DESCENDING));
 
         return $this->automationRepository->search($criteria, $context)->getEntities();
-    }
-
-    private function loadAbandonedCarts(Context $context): AbandonedCartCollection
-    {
-        $criteria = new Criteria();
-        $criteria->addAssociation('customer');
-        $criteria->addAssociation('salesChannel');
-        $criteria->addAssociation('lineItems');
-
-        $criteria->setLimit(100);
-
-        return $this->abandonedCartRepository->search($criteria, $context)->getEntities();
     }
 }

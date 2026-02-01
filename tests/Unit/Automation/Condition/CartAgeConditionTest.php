@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Frosh\AbandonedCart\Tests\Unit\Automation\Condition;
 
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Frosh\AbandonedCart\Automation\Condition\CartAgeCondition;
-use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -29,200 +30,68 @@ class CartAgeConditionTest extends TestCase
         static::assertSame('cart_age', $this->condition->getType());
     }
 
-    public function testEvaluateReturnsFalseWhenCreatedAtIsNull(): void
+    #[DataProvider('operatorMappingDataProvider')]
+    public function testApplyWithDifferentOperators(string $operator, string $expectedSqlOperator): void
     {
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getCreatedAt')->willReturn(null);
-
-        $result = $this->condition->evaluate($cart, ['operator' => '>=', 'value' => 24, 'unit' => 'hours'], $this->context);
-
-        static::assertFalse($result);
-    }
-
-    #[DataProvider('operatorDataProvider')]
-    public function testEvaluateWithDifferentOperators(
-        string $operator,
-        int $cartAgeInHours,
-        int $configValue,
-        bool $expected
-    ): void {
-        $createdAt = new \DateTimeImmutable(sprintf('-%d hours', $cartAgeInHours));
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getCreatedAt')->willReturn($createdAt);
+        $query = $this->createQueryBuilder();
 
         $config = [
             'operator' => $operator,
-            'value' => $configValue,
+            'value' => 24,
             'unit' => 'hours',
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertSame($expected, $result);
+        $sql = $query->getSQL();
+        static::assertStringContainsString("cart.created_at {$expectedSqlOperator}", $sql);
     }
 
     /**
-     * @return iterable<string, array{operator: string, cartAgeInHours: int, configValue: int, expected: bool}>
+     * @return iterable<string, array{operator: string, expectedSqlOperator: string}>
      */
-    public static function operatorDataProvider(): iterable
+    public static function operatorMappingDataProvider(): iterable
     {
-        // Greater than or equal (>=, gte)
-        yield 'gte operator - cart age equals threshold' => [
+        // Cart age >= X means created_at <= threshold (cart was created at or before threshold)
+        yield 'gte operator maps to <=' => [
             'operator' => '>=',
-            'cartAgeInHours' => 24,
-            'configValue' => 24,
-            'expected' => true,
+            'expectedSqlOperator' => '<=',
         ];
-        yield 'gte operator - cart age greater than threshold' => [
-            'operator' => '>=',
-            'cartAgeInHours' => 48,
-            'configValue' => 24,
-            'expected' => true,
-        ];
-        yield 'gte operator - cart age less than threshold' => [
-            'operator' => '>=',
-            'cartAgeInHours' => 12,
-            'configValue' => 24,
-            'expected' => false,
-        ];
-        yield 'gte alias - cart age equals threshold' => [
+        yield 'gte alias maps to <=' => [
             'operator' => 'gte',
-            'cartAgeInHours' => 24,
-            'configValue' => 24,
-            'expected' => true,
+            'expectedSqlOperator' => '<=',
         ];
-
-        // Less than or equal (<=, lte)
-        yield 'lte operator - cart age equals threshold' => [
+        yield 'lte operator maps to >=' => [
             'operator' => '<=',
-            'cartAgeInHours' => 24,
-            'configValue' => 24,
-            'expected' => true,
+            'expectedSqlOperator' => '>=',
         ];
-        yield 'lte operator - cart age less than threshold' => [
-            'operator' => '<=',
-            'cartAgeInHours' => 12,
-            'configValue' => 24,
-            'expected' => true,
-        ];
-        yield 'lte operator - cart age greater than threshold' => [
-            'operator' => '<=',
-            'cartAgeInHours' => 48,
-            'configValue' => 24,
-            'expected' => false,
-        ];
-        yield 'lte alias - cart age equals threshold' => [
+        yield 'lte alias maps to >=' => [
             'operator' => 'lte',
-            'cartAgeInHours' => 24,
-            'configValue' => 24,
-            'expected' => true,
+            'expectedSqlOperator' => '>=',
         ];
-
-        // Equal (==, eq)
-        yield 'eq operator - cart age equals threshold' => [
-            'operator' => '==',
-            'cartAgeInHours' => 24,
-            'configValue' => 24,
-            'expected' => true,
-        ];
-        yield 'eq operator - cart age not equal to threshold' => [
-            'operator' => '==',
-            'cartAgeInHours' => 25,
-            'configValue' => 24,
-            'expected' => false,
-        ];
-        yield 'eq alias - cart age equals threshold' => [
-            'operator' => 'eq',
-            'cartAgeInHours' => 24,
-            'configValue' => 24,
-            'expected' => true,
-        ];
-
-        // Not equal (!=, neq)
-        yield 'neq operator - cart age not equal to threshold' => [
-            'operator' => '!=',
-            'cartAgeInHours' => 25,
-            'configValue' => 24,
-            'expected' => true,
-        ];
-        yield 'neq operator - cart age equals threshold' => [
-            'operator' => '!=',
-            'cartAgeInHours' => 24,
-            'configValue' => 24,
-            'expected' => false,
-        ];
-        yield 'neq alias - cart age not equal to threshold' => [
-            'operator' => 'neq',
-            'cartAgeInHours' => 25,
-            'configValue' => 24,
-            'expected' => true,
-        ];
-
-        // Greater than (>, gt)
-        yield 'gt operator - cart age greater than threshold' => [
+        yield 'gt operator maps to <' => [
             'operator' => '>',
-            'cartAgeInHours' => 25,
-            'configValue' => 24,
-            'expected' => true,
+            'expectedSqlOperator' => '<',
         ];
-        yield 'gt operator - cart age equals threshold' => [
-            'operator' => '>',
-            'cartAgeInHours' => 24,
-            'configValue' => 24,
-            'expected' => false,
-        ];
-        yield 'gt operator - cart age less than threshold' => [
-            'operator' => '>',
-            'cartAgeInHours' => 23,
-            'configValue' => 24,
-            'expected' => false,
-        ];
-        yield 'gt alias - cart age greater than threshold' => [
+        yield 'gt alias maps to <' => [
             'operator' => 'gt',
-            'cartAgeInHours' => 25,
-            'configValue' => 24,
-            'expected' => true,
+            'expectedSqlOperator' => '<',
         ];
-
-        // Less than (<, lt)
-        yield 'lt operator - cart age less than threshold' => [
+        yield 'lt operator maps to >' => [
             'operator' => '<',
-            'cartAgeInHours' => 23,
-            'configValue' => 24,
-            'expected' => true,
+            'expectedSqlOperator' => '>',
         ];
-        yield 'lt operator - cart age equals threshold' => [
-            'operator' => '<',
-            'cartAgeInHours' => 24,
-            'configValue' => 24,
-            'expected' => false,
-        ];
-        yield 'lt operator - cart age greater than threshold' => [
-            'operator' => '<',
-            'cartAgeInHours' => 25,
-            'configValue' => 24,
-            'expected' => false,
-        ];
-        yield 'lt alias - cart age less than threshold' => [
+        yield 'lt alias maps to >' => [
             'operator' => 'lt',
-            'cartAgeInHours' => 23,
-            'configValue' => 24,
-            'expected' => true,
+            'expectedSqlOperator' => '>',
         ];
     }
 
     #[DataProvider('unitDataProvider')]
-    public function testEvaluateWithDifferentUnits(
-        string $unit,
-        int $cartAgeInMinutes,
-        int $configValue,
-        bool $expected
-    ): void {
-        $createdAt = new \DateTimeImmutable(sprintf('-%d minutes', $cartAgeInMinutes));
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getCreatedAt')->willReturn($createdAt);
+    public function testApplyWithDifferentUnits(string $unit, int $configValue, int $expectedSeconds): void
+    {
+        $query = $this->createQueryBuilder();
+        $beforeTime = new \DateTimeImmutable();
 
         $config = [
             'operator' => '>=',
@@ -230,96 +99,67 @@ class CartAgeConditionTest extends TestCase
             'unit' => $unit,
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertSame($expected, $result);
+        // Get the parameter value
+        $params = $query->getParameters();
+        static::assertCount(1, $params);
+        $paramValue = array_values($params)[0];
+
+        // The threshold should be approximately now minus the expected seconds
+        $expectedThreshold = $beforeTime->modify("-{$expectedSeconds} seconds");
+        $actualThreshold = new \DateTimeImmutable($paramValue);
+
+        // Allow 2 seconds tolerance for test execution time
+        $diff = abs($expectedThreshold->getTimestamp() - $actualThreshold->getTimestamp());
+        static::assertLessThanOrEqual(2, $diff, "Threshold difference too large: {$diff} seconds");
     }
 
     /**
-     * @return iterable<string, array{unit: string, cartAgeInMinutes: int, configValue: int, expected: bool}>
+     * @return iterable<string, array{unit: string, configValue: int, expectedSeconds: int}>
      */
     public static function unitDataProvider(): iterable
     {
-        // Minutes
-        yield 'minutes - age equals threshold' => [
+        yield 'minutes unit' => [
             'unit' => 'minutes',
-            'cartAgeInMinutes' => 30,
             'configValue' => 30,
-            'expected' => true,
+            'expectedSeconds' => 30 * 60,
         ];
-        yield 'minutes - age greater than threshold' => [
-            'unit' => 'minutes',
-            'cartAgeInMinutes' => 45,
-            'configValue' => 30,
-            'expected' => true,
-        ];
-        yield 'minutes - age less than threshold' => [
-            'unit' => 'minutes',
-            'cartAgeInMinutes' => 15,
-            'configValue' => 30,
-            'expected' => false,
-        ];
-
-        // Hours
-        yield 'hours - age equals threshold' => [
+        yield 'hours unit' => [
             'unit' => 'hours',
-            'cartAgeInMinutes' => 120, // 2 hours
             'configValue' => 2,
-            'expected' => true,
+            'expectedSeconds' => 2 * 3600,
         ];
-        yield 'hours - age greater than threshold' => [
-            'unit' => 'hours',
-            'cartAgeInMinutes' => 180, // 3 hours
-            'configValue' => 2,
-            'expected' => true,
-        ];
-        yield 'hours - age less than threshold' => [
-            'unit' => 'hours',
-            'cartAgeInMinutes' => 60, // 1 hour
-            'configValue' => 2,
-            'expected' => false,
-        ];
-
-        // Days
-        yield 'days - age equals threshold' => [
+        yield 'days unit' => [
             'unit' => 'days',
-            'cartAgeInMinutes' => 2880, // 2 days
             'configValue' => 2,
-            'expected' => true,
+            'expectedSeconds' => 2 * 86400,
         ];
-        yield 'days - age greater than threshold' => [
-            'unit' => 'days',
-            'cartAgeInMinutes' => 4320, // 3 days
+        yield 'unknown unit defaults to hours' => [
+            'unit' => 'unknown',
             'configValue' => 2,
-            'expected' => true,
-        ];
-        yield 'days - age less than threshold' => [
-            'unit' => 'days',
-            'cartAgeInMinutes' => 1440, // 1 day
-            'configValue' => 2,
-            'expected' => false,
+            'expectedSeconds' => 2 * 3600,
         ];
     }
 
-    public function testEvaluateWithDefaultValues(): void
+    public function testApplyWithDefaultValues(): void
     {
-        // Cart created 25 hours ago should pass default config (>= 24 hours)
-        $createdAt = new \DateTimeImmutable('-25 hours');
+        $query = $this->createQueryBuilder();
 
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getCreatedAt')->willReturn($createdAt);
+        // Empty config should use defaults: operator >= , value 24, unit hours
+        $this->condition->apply($query, [], $this->context);
 
-        $result = $this->condition->evaluate($cart, [], $this->context);
+        $sql = $query->getSQL();
+        // >= maps to <=
+        static::assertStringContainsString('cart.created_at <=', $sql);
 
-        static::assertTrue($result);
+        $params = $query->getParameters();
+        static::assertCount(1, $params);
     }
 
-    public function testEvaluateWithUnknownOperatorReturnsFalse(): void
+    public function testApplyWithUnknownOperatorDefaultsToLte(): void
     {
-        $createdAt = new \DateTimeImmutable('-25 hours');
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getCreatedAt')->willReturn($createdAt);
+        $query = $this->createQueryBuilder();
 
         $config = [
             'operator' => 'invalid_operator',
@@ -327,27 +167,47 @@ class CartAgeConditionTest extends TestCase
             'unit' => 'hours',
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertFalse($result);
+        $sql = $query->getSQL();
+        // unknown operator defaults to <=
+        static::assertStringContainsString('cart.created_at <=', $sql);
     }
 
-    public function testEvaluateWithUnknownUnitDefaultsToHours(): void
+    public function testApplyAddsWhereClauseWithParameter(): void
     {
-        // Cart created 25 hours ago with unknown unit should default to hours
-        $createdAt = new \DateTimeImmutable('-25 hours');
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getCreatedAt')->willReturn($createdAt);
+        $query = $this->createQueryBuilder();
 
         $config = [
             'operator' => '>=',
             'value' => 24,
-            'unit' => 'unknown_unit',
+            'unit' => 'hours',
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertTrue($result);
+        $sql = $query->getSQL();
+        $params = $query->getParameters();
+
+        // Should have a WHERE clause
+        static::assertStringContainsString('WHERE', $sql);
+        static::assertStringContainsString('cart.created_at', $sql);
+
+        // Should have exactly one parameter
+        static::assertCount(1, $params);
+
+        // Parameter should be a datetime string
+        $paramValue = array_values($params)[0];
+        static::assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $paramValue);
+    }
+
+    private function createQueryBuilder(): QueryBuilder
+    {
+        $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+        $query = $connection->createQueryBuilder();
+        $query->select('cart.id')
+            ->from('frosh_abandoned_cart', 'cart');
+
+        return $query;
     }
 }

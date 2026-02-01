@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Frosh\AbandonedCart\Automation\Condition;
 
-use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
+use Doctrine\DBAL\Query\QueryBuilder;
+use Shopware\Core\Framework\Context;
 
 class TimeSinceLastAutomationCondition implements ConditionInterface
 {
@@ -13,45 +14,32 @@ class TimeSinceLastAutomationCondition implements ConditionInterface
         return 'time_since_last_automation';
     }
 
-    /**
-     * @param array<string, mixed> $config
-     */
-    public function evaluate(AbandonedCartEntity $cart, array $config, \Shopware\Core\Framework\Context $context): bool
+    public function apply(QueryBuilder $query, array $config, Context $context): void
     {
         $operator = $config['operator'] ?? '>=';
         $value = (int) ($config['value'] ?? 24);
         $unit = $config['unit'] ?? 'hours';
 
-        $lastAutomationAt = $cart->getLastAutomationAt();
-
-        // If no automation has been run yet, the condition passes
-        if ($lastAutomationAt === null) {
-            return true;
-        }
-
-        $now = new \DateTimeImmutable();
-        $diff = $now->getTimestamp() - $lastAutomationAt->getTimestamp();
-
-        $timeInSeconds = match ($unit) {
+        $seconds = match ($unit) {
             'minutes' => $value * 60,
             'hours' => $value * 3600,
             'days' => $value * 86400,
             default => $value * 3600,
         };
 
-        return $this->compare($diff, $timeInSeconds, $operator);
-    }
+        $threshold = (new \DateTimeImmutable())->modify("-{$seconds} seconds");
 
-    private function compare(int $actual, int $expected, string $operator): bool
-    {
-        return match ($operator) {
-            '>=', 'gte' => $actual >= $expected,
-            '<=', 'lte' => $actual <= $expected,
-            '==', 'eq' => $actual === $expected,
-            '!=', 'neq' => $actual !== $expected,
-            '>', 'gt' => $actual > $expected,
-            '<', 'lt' => $actual < $expected,
-            default => false,
+        // Time since last automation >= X means last_automation_at <= threshold OR is NULL
+        $sqlOperator = match ($operator) {
+            '>=', 'gte' => '<=',
+            '<=', 'lte' => '>=',
+            '>', 'gt' => '<',
+            '<', 'lt' => '>',
+            default => '<=',
         };
+
+        $paramName = 'last_automation_' . uniqid();
+        $query->andWhere("(cart.last_automation_at IS NULL OR cart.last_automation_at {$sqlOperator} :{$paramName})");
+        $query->setParameter($paramName, $threshold->format('Y-m-d H:i:s'));
     }
 }

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Frosh\AbandonedCart\Automation\Condition;
 
-use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
+use Doctrine\DBAL\Query\QueryBuilder;
+use Shopware\Core\Framework\Context;
 
 class AutomationCountCondition implements ConditionInterface
 {
@@ -13,29 +14,23 @@ class AutomationCountCondition implements ConditionInterface
         return 'automation_count';
     }
 
-    /**
-     * @param array<string, mixed> $config
-     */
-    public function evaluate(AbandonedCartEntity $cart, array $config, \Shopware\Core\Framework\Context $context): bool
+    public function apply(QueryBuilder $query, array $config, Context $context): void
     {
         $operator = $config['operator'] ?? '==';
         $value = (int) ($config['value'] ?? 0);
 
-        $automationCount = $cart->getAutomationCount();
-
-        return $this->compare($automationCount, $value, $operator);
-    }
-
-    private function compare(int $actual, int $expected, string $operator): bool
-    {
-        return match ($operator) {
-            '>=', 'gte' => $actual >= $expected,
-            '<=', 'lte' => $actual <= $expected,
-            '==', 'eq' => $actual === $expected,
-            '!=', 'neq' => $actual !== $expected,
-            '>', 'gt' => $actual > $expected,
-            '<', 'lt' => $actual < $expected,
-            default => false,
+        $sqlOperator = match ($operator) {
+            '>=', 'gte' => '>=',
+            '<=', 'lte' => '<=',
+            '>', 'gt' => '>',
+            '<', 'lt' => '<',
+            '==', 'eq' => '=',
+            '!=', 'neq' => '!=',
+            default => '=',
         };
+
+        $paramName = 'automation_count_' . uniqid();
+        $query->andWhere("COALESCE(cart.automation_count, 0) {$sqlOperator} :{$paramName}");
+        $query->setParameter($paramName, $value);
     }
 }

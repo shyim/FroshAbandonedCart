@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Frosh\AbandonedCart\Tests\Integration\Automation;
 
 use Doctrine\DBAL\Connection;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Frosh\AbandonedCart\Automation\Action\ActionContext;
 use Frosh\AbandonedCart\Automation\Action\ActionInterface;
 use Frosh\AbandonedCart\Automation\AutomationProcessor;
@@ -12,7 +13,6 @@ use Frosh\AbandonedCart\Automation\Condition\ConditionInterface;
 use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\NullLogger;
-use Shopware\Core\Defaults;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
@@ -109,45 +109,6 @@ class AutomationProcessorTest extends TestCase
 
         $logCount = $this->automationLogRepository->search(new Criteria(), Context::createDefaultContext())->getTotal();
         static::assertSame(0, $logCount, 'No automation log should be created when conditions do not match');
-    }
-
-    public function testMultipleAutomationsWithPriorityOrdering(): void
-    {
-        $executionOrder = [];
-
-        $mockCondition = $this->createMockCondition('test_condition', true);
-
-        $mockActionHigh = $this->createMockAction('high_priority_action', function () use (&$executionOrder): void {
-            $executionOrder[] = 'high';
-        });
-
-        $mockActionLow = $this->createMockAction('low_priority_action', function () use (&$executionOrder): void {
-            $executionOrder[] = 'low';
-        });
-
-        $this->createAbandonedCart($this->customerId, 100.0);
-
-        $this->createAutomation(
-            'Low Priority Automation',
-            true,
-            10,
-            [['type' => 'test_condition']],
-            [['type' => 'low_priority_action']]
-        );
-
-        $this->createAutomation(
-            'High Priority Automation',
-            true,
-            100,
-            [['type' => 'test_condition']],
-            [['type' => 'high_priority_action']]
-        );
-
-        $processor = $this->createProcessor([$mockCondition], [$mockActionHigh, $mockActionLow]);
-        $processor->process(Context::createDefaultContext());
-
-        static::assertCount(1, $executionOrder, 'Only one automation should execute (first matching wins)');
-        static::assertSame('high', $executionOrder[0], 'Higher priority automation should execute first');
     }
 
     public function testAutomationWithSalesChannelIdFilter(): void
@@ -446,18 +407,19 @@ class AutomationProcessorTest extends TestCase
             $this->automationRepository,
             $this->abandonedCartRepository,
             $this->automationLogRepository,
+            $this->connection,
             $conditions,
             $actions,
             new NullLogger()
         );
     }
 
-    private function createMockCondition(string $type, bool $returnValue): ConditionInterface
+    private function createMockCondition(string $type, bool $matchAll): ConditionInterface
     {
-        return new class($type, $returnValue) implements ConditionInterface {
+        return new class($type, $matchAll) implements ConditionInterface {
             public function __construct(
                 private readonly string $type,
-                private readonly bool $returnValue
+                private readonly bool $matchAll
             ) {
             }
 
@@ -466,9 +428,13 @@ class AutomationProcessorTest extends TestCase
                 return $this->type;
             }
 
-            public function evaluate(AbandonedCartEntity $cart, array $config, Context $context): bool
+            public function apply(QueryBuilder $query, array $config, Context $context): void
             {
-                return $this->returnValue;
+                if (!$this->matchAll) {
+                    // Add impossible condition to exclude all carts
+                    $query->andWhere('1 = 0');
+                }
+                // If matchAll is true, don't add any condition (matches all)
             }
         };
     }

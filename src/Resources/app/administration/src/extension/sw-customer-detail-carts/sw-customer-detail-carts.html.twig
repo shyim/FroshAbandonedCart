@@ -1,0 +1,63 @@
+{% block sw_customer_detail_carts %}
+<mt-card
+    class="sw-customer-detail-carts"
+    :title="$tc('frosh-abandoned-carts.customer.cardTitle')"
+    position-identifier="sw-customer-detail-carts"
+>
+    {% block sw_customer_detail_carts_grid %}
+    <template #grid>
+        <sw-data-grid
+            v-if="carts && carts.total > 0"
+            :dataSource="carts"
+            :columns="columns"
+            :isLoading="isLoading"
+            :showSelection="false"
+            :showActions="true"
+        >
+            {% block sw_customer_detail_carts_column_total_price %}
+            <template #column-totalPrice="{ item }">
+                {{ currencyFilter(item.totalPrice, item.currencyIsoCode || 'EUR') }}
+            </template>
+            {% endblock %}
+
+            {% block sw_customer_detail_carts_column_line_item_count %}
+            <template #column-lineItemCount="{ item }">
+                {{ item.lineItems ? item.lineItems.length : 0 }}
+            </template>
+            {% endblock %}
+
+            {% block sw_customer_detail_carts_column_sales_channel %}
+            <template #column-salesChannel.name="{ item }">
+                {{ item.salesChannel ? item.salesChannel.name : '-' }}
+            </template>
+            {% endblock %}
+
+            {% block sw_customer_detail_carts_column_created_at %}
+            <template #column-createdAt="{ item }">
+                <sw-time-ago :date="item.createdAt"/>
+            </template>
+            {% endblock %}
+
+            {% block sw_customer_detail_carts_actions %}
+            <template #actions="{ item }">
+                <sw-context-menu-item
+                    :routerLink="{ name: 'frosh.abandoned.carts.detail', params: { id: item.id } }"
+                >
+                    {{ $tc('frosh-abandoned-carts.customer.openCart') }}
+                </sw-context-menu-item>
+            </template>
+            {% endblock %}
+        </sw-data-grid>
+    </template>
+    {% endblock %}
+
+    {% block sw_customer_detail_carts_empty_state %}
+    <template v-if="(!carts || carts.total === 0) && !isLoading">
+        <mt-empty-state
+            icon="regular-shopping-cart"
+            :headline="$tc('frosh-abandoned-carts.customer.emptyState')"
+        />
+    </template>
+    {% endblock %}
+</mt-card>
+{% endblock %}

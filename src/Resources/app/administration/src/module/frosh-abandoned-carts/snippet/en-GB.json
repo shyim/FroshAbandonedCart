@@ -124,6 +124,20 @@
                 "remove_customer_tag": "Remove Customer Tag",
                 "set_customer_custom_field": "Set Customer Custom Field"
             }
+        },
+        "customer": {
+            "tabTitle": "Abandoned Carts",
+            "cardTitle": "Abandoned Carts",
+            "emptyState": "No abandoned carts for this customer",
+            "columnTotalPrice": "Total Price",
+            "columnLineItemCount": "Items",
+            "columnSalesChannel": "Sales Channel",
+            "columnCreatedAt": "Created At",
+            "openCart": "Open Cart"
+        },
+        "settings": {
+            "title": "Settings",
+            "buttonSave": "Save"
         }
     }
 }

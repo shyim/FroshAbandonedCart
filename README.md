@@ -33,8 +33,8 @@ Create sophisticated automation rules to engage customers with abandoned carts:
 
 ## Requirements
 
-- Shopware 6.6.0 or higher
-- PHP 8.1 or higher
+- Shopware 6.7.0 or higher
+- PHP 8.2 or higher
 
 ## Installation
 

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Frosh\AbandonedCart\Tests\Unit\Automation\Condition;
 
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Frosh\AbandonedCart\Automation\Condition\AutomationCountCondition;
-use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -29,262 +30,207 @@ class AutomationCountConditionTest extends TestCase
         static::assertSame('automation_count', $this->condition->getType());
     }
 
-    #[DataProvider('operatorDataProvider')]
-    public function testEvaluateWithDifferentOperators(
-        string $operator,
-        int $automationCount,
-        int $configValue,
-        bool $expected
-    ): void {
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getAutomationCount')->willReturn($automationCount);
+    #[DataProvider('operatorMappingDataProvider')]
+    public function testApplyWithDifferentOperators(string $operator, string $expectedSqlOperator): void
+    {
+        $query = $this->createQueryBuilder();
 
         $config = [
             'operator' => $operator,
-            'value' => $configValue,
+            'value' => 5,
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertSame($expected, $result);
+        $sql = $query->getSQL();
+        static::assertStringContainsString("COALESCE(cart.automation_count, 0) {$expectedSqlOperator}", $sql);
     }
 
     /**
-     * @return iterable<string, array{operator: string, automationCount: int, configValue: int, expected: bool}>
+     * @return iterable<string, array{operator: string, expectedSqlOperator: string}>
      */
-    public static function operatorDataProvider(): iterable
+    public static function operatorMappingDataProvider(): iterable
     {
-        // Greater than or equal (>=, gte)
-        yield 'gte operator - count equals threshold' => [
+        yield 'gte operator maps to >=' => [
             'operator' => '>=',
-            'automationCount' => 5,
-            'configValue' => 5,
-            'expected' => true,
+            'expectedSqlOperator' => '>=',
         ];
-        yield 'gte operator - count greater than threshold' => [
-            'operator' => '>=',
-            'automationCount' => 10,
-            'configValue' => 5,
-            'expected' => true,
-        ];
-        yield 'gte operator - count less than threshold' => [
-            'operator' => '>=',
-            'automationCount' => 3,
-            'configValue' => 5,
-            'expected' => false,
-        ];
-        yield 'gte alias - count equals threshold' => [
+        yield 'gte alias maps to >=' => [
             'operator' => 'gte',
-            'automationCount' => 5,
-            'configValue' => 5,
-            'expected' => true,
+            'expectedSqlOperator' => '>=',
         ];
-
-        // Less than or equal (<=, lte)
-        yield 'lte operator - count equals threshold' => [
+        yield 'lte operator maps to <=' => [
             'operator' => '<=',
-            'automationCount' => 5,
-            'configValue' => 5,
-            'expected' => true,
+            'expectedSqlOperator' => '<=',
         ];
-        yield 'lte operator - count less than threshold' => [
-            'operator' => '<=',
-            'automationCount' => 3,
-            'configValue' => 5,
-            'expected' => true,
-        ];
-        yield 'lte operator - count greater than threshold' => [
-            'operator' => '<=',
-            'automationCount' => 10,
-            'configValue' => 5,
-            'expected' => false,
-        ];
-        yield 'lte alias - count equals threshold' => [
+        yield 'lte alias maps to <=' => [
             'operator' => 'lte',
-            'automationCount' => 5,
-            'configValue' => 5,
-            'expected' => true,
+            'expectedSqlOperator' => '<=',
         ];
-
-        // Equal (==, eq)
-        yield 'eq operator - count equals threshold' => [
-            'operator' => '==',
-            'automationCount' => 5,
-            'configValue' => 5,
-            'expected' => true,
-        ];
-        yield 'eq operator - count not equal to threshold' => [
-            'operator' => '==',
-            'automationCount' => 6,
-            'configValue' => 5,
-            'expected' => false,
-        ];
-        yield 'eq alias - count equals threshold' => [
-            'operator' => 'eq',
-            'automationCount' => 5,
-            'configValue' => 5,
-            'expected' => true,
-        ];
-
-        // Not equal (!=, neq)
-        yield 'neq operator - count not equal to threshold' => [
-            'operator' => '!=',
-            'automationCount' => 6,
-            'configValue' => 5,
-            'expected' => true,
-        ];
-        yield 'neq operator - count equals threshold' => [
-            'operator' => '!=',
-            'automationCount' => 5,
-            'configValue' => 5,
-            'expected' => false,
-        ];
-        yield 'neq alias - count not equal to threshold' => [
-            'operator' => 'neq',
-            'automationCount' => 6,
-            'configValue' => 5,
-            'expected' => true,
-        ];
-
-        // Greater than (>, gt)
-        yield 'gt operator - count greater than threshold' => [
+        yield 'gt operator maps to >' => [
             'operator' => '>',
-            'automationCount' => 6,
-            'configValue' => 5,
-            'expected' => true,
+            'expectedSqlOperator' => '>',
         ];
-        yield 'gt operator - count equals threshold' => [
-            'operator' => '>',
-            'automationCount' => 5,
-            'configValue' => 5,
-            'expected' => false,
-        ];
-        yield 'gt operator - count less than threshold' => [
-            'operator' => '>',
-            'automationCount' => 4,
-            'configValue' => 5,
-            'expected' => false,
-        ];
-        yield 'gt alias - count greater than threshold' => [
+        yield 'gt alias maps to >' => [
             'operator' => 'gt',
-            'automationCount' => 6,
-            'configValue' => 5,
-            'expected' => true,
+            'expectedSqlOperator' => '>',
         ];
-
-        // Less than (<, lt)
-        yield 'lt operator - count less than threshold' => [
+        yield 'lt operator maps to <' => [
             'operator' => '<',
-            'automationCount' => 4,
-            'configValue' => 5,
-            'expected' => true,
+            'expectedSqlOperator' => '<',
         ];
-        yield 'lt operator - count equals threshold' => [
-            'operator' => '<',
-            'automationCount' => 5,
-            'configValue' => 5,
-            'expected' => false,
-        ];
-        yield 'lt operator - count greater than threshold' => [
-            'operator' => '<',
-            'automationCount' => 6,
-            'configValue' => 5,
-            'expected' => false,
-        ];
-        yield 'lt alias - count less than threshold' => [
+        yield 'lt alias maps to <' => [
             'operator' => 'lt',
-            'automationCount' => 4,
-            'configValue' => 5,
-            'expected' => true,
+            'expectedSqlOperator' => '<',
         ];
-    }
-
-    public function testEvaluateWithDefaultValues(): void
-    {
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getAutomationCount')->willReturn(0);
-
-        // Default operator is ==, default value is 0
-        $result = $this->condition->evaluate($cart, [], $this->context);
-
-        static::assertTrue($result);
-    }
-
-    public function testEvaluateWithZeroAutomationCount(): void
-    {
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getAutomationCount')->willReturn(0);
-
-        $config = [
+        yield 'eq operator maps to =' => [
             'operator' => '==',
-            'value' => 0,
+            'expectedSqlOperator' => '=',
         ];
-
-        $result = $this->condition->evaluate($cart, $config, $this->context);
-
-        static::assertTrue($result);
+        yield 'eq alias maps to =' => [
+            'operator' => 'eq',
+            'expectedSqlOperator' => '=',
+        ];
+        yield 'neq operator maps to !=' => [
+            'operator' => '!=',
+            'expectedSqlOperator' => '!=',
+        ];
+        yield 'neq alias maps to !=' => [
+            'operator' => 'neq',
+            'expectedSqlOperator' => '!=',
+        ];
     }
 
-    public function testEvaluateWithUnknownOperatorReturnsFalse(): void
+    public function testApplyWithDefaultValues(): void
     {
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getAutomationCount')->willReturn(5);
+        $query = $this->createQueryBuilder();
+
+        // Empty config should use defaults: operator == , value 0
+        $this->condition->apply($query, [], $this->context);
+
+        $sql = $query->getSQL();
+        static::assertStringContainsString('COALESCE(cart.automation_count, 0) =', $sql);
+
+        $params = $query->getParameters();
+        static::assertCount(1, $params);
+        static::assertSame(0, array_values($params)[0]);
+    }
+
+    public function testApplyWithUnknownOperatorDefaultsToEqual(): void
+    {
+        $query = $this->createQueryBuilder();
 
         $config = [
             'operator' => 'invalid_operator',
             'value' => 5,
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertFalse($result);
+        $sql = $query->getSQL();
+        static::assertStringContainsString('COALESCE(cart.automation_count, 0) =', $sql);
     }
 
-    public function testEvaluateFirstAutomation(): void
+    public function testApplyWithZeroValue(): void
     {
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getAutomationCount')->willReturn(0);
+        $query = $this->createQueryBuilder();
 
-        // Check if this is the first automation (count == 0)
         $config = [
             'operator' => '==',
             'value' => 0,
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertTrue($result);
+        $params = $query->getParameters();
+        static::assertCount(1, $params);
+        static::assertSame(0, array_values($params)[0]);
     }
 
-    public function testEvaluateLimitAutomations(): void
+    public function testApplyUsesCoalesceForNullHandling(): void
     {
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getAutomationCount')->willReturn(3);
+        $query = $this->createQueryBuilder();
 
-        // Check if we haven't exceeded max automations (count < 5)
+        $config = [
+            'operator' => '==',
+            'value' => 0,
+        ];
+
+        $this->condition->apply($query, $config, $this->context);
+
+        $sql = $query->getSQL();
+        // Should use COALESCE to handle NULL automation_count as 0
+        static::assertStringContainsString('COALESCE(cart.automation_count, 0)', $sql);
+    }
+
+    public function testApplyFirstAutomationCondition(): void
+    {
+        $query = $this->createQueryBuilder();
+
+        // Check for first automation (count == 0)
+        $config = [
+            'operator' => '==',
+            'value' => 0,
+        ];
+
+        $this->condition->apply($query, $config, $this->context);
+
+        $sql = $query->getSQL();
+        $params = $query->getParameters();
+
+        static::assertStringContainsString('COALESCE(cart.automation_count, 0) =', $sql);
+        static::assertSame(0, array_values($params)[0]);
+    }
+
+    public function testApplyLimitAutomationsCondition(): void
+    {
+        $query = $this->createQueryBuilder();
+
+        // Limit automations to less than 5
         $config = [
             'operator' => '<',
             'value' => 5,
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertTrue($result);
+        $sql = $query->getSQL();
+        $params = $query->getParameters();
+
+        static::assertStringContainsString('COALESCE(cart.automation_count, 0) <', $sql);
+        static::assertSame(5, array_values($params)[0]);
     }
 
-    public function testEvaluateExceededLimitAutomations(): void
+    public function testApplyAddsWhereClauseWithParameter(): void
     {
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getAutomationCount')->willReturn(5);
+        $query = $this->createQueryBuilder();
 
-        // Check if we've exceeded max automations (count >= 5)
         $config = [
-            'operator' => '<',
-            'value' => 5,
+            'operator' => '>=',
+            'value' => 3,
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertFalse($result);
+        $sql = $query->getSQL();
+        $params = $query->getParameters();
+
+        // Should have a WHERE clause
+        static::assertStringContainsString('WHERE', $sql);
+        static::assertStringContainsString('cart.automation_count', $sql);
+
+        // Should have exactly one parameter
+        static::assertCount(1, $params);
+        static::assertSame(3, array_values($params)[0]);
+    }
+
+    private function createQueryBuilder(): QueryBuilder
+    {
+        $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+        $query = $connection->createQueryBuilder();
+        $query->select('cart.id')
+            ->from('frosh_abandoned_cart', 'cart');
+
+        return $query;
     }
 }

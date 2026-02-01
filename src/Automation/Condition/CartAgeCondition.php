@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Frosh\AbandonedCart\Automation\Condition;
 
-use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
+use Doctrine\DBAL\Query\QueryBuilder;
+use Shopware\Core\Framework\Context;
 
 class CartAgeCondition implements ConditionInterface
 {
@@ -13,43 +14,32 @@ class CartAgeCondition implements ConditionInterface
         return 'cart_age';
     }
 
-    /**
-     * @param array<string, mixed> $config
-     */
-    public function evaluate(AbandonedCartEntity $cart, array $config, \Shopware\Core\Framework\Context $context): bool
+    public function apply(QueryBuilder $query, array $config, Context $context): void
     {
         $operator = $config['operator'] ?? '>=';
         $value = (int) ($config['value'] ?? 24);
         $unit = $config['unit'] ?? 'hours';
 
-        $createdAt = $cart->getCreatedAt();
-        if ($createdAt === null) {
-            return false;
-        }
-
-        $now = new \DateTimeImmutable();
-        $diff = $now->getTimestamp() - $createdAt->getTimestamp();
-
-        $ageInSeconds = match ($unit) {
+        $seconds = match ($unit) {
             'minutes' => $value * 60,
             'hours' => $value * 3600,
             'days' => $value * 86400,
             default => $value * 3600,
         };
 
-        return $this->compare($diff, $ageInSeconds, $operator);
-    }
+        $threshold = (new \DateTimeImmutable())->modify("-{$seconds} seconds");
 
-    private function compare(int $actual, int $expected, string $operator): bool
-    {
-        return match ($operator) {
-            '>=', 'gte' => $actual >= $expected,
-            '<=', 'lte' => $actual <= $expected,
-            '==', 'eq' => $actual === $expected,
-            '!=', 'neq' => $actual !== $expected,
-            '>', 'gt' => $actual > $expected,
-            '<', 'lt' => $actual < $expected,
-            default => false,
+        // Cart age >= X means created_at <= threshold (older than X)
+        $sqlOperator = match ($operator) {
+            '>=', 'gte' => '<=',
+            '<=', 'lte' => '>=',
+            '>', 'gt' => '<',
+            '<', 'lt' => '>',
+            default => '<=',
         };
+
+        $paramName = 'cart_age_' . uniqid();
+        $query->andWhere("cart.created_at {$sqlOperator} :{$paramName}");
+        $query->setParameter($paramName, $threshold->format('Y-m-d H:i:s'));
     }
 }

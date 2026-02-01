@@ -124,6 +124,20 @@
                 "remove_customer_tag": "Kunden-Tag entfernen",
                 "set_customer_custom_field": "Kunden-Zusatzfeld setzen"
             }
+        },
+        "customer": {
+            "tabTitle": "Abgebrochene Warenkörbe",
+            "cardTitle": "Abgebrochene Warenkörbe",
+            "emptyState": "Keine abgebrochenen Warenkörbe für diesen Kunden",
+            "columnTotalPrice": "Gesamtpreis",
+            "columnLineItemCount": "Artikel",
+            "columnSalesChannel": "Verkaufskanal",
+            "columnCreatedAt": "Erstellt am",
+            "openCart": "Warenkorb öffnen"
+        },
+        "settings": {
+            "title": "Einstellungen",
+            "buttonSave": "Speichern"
         }
     }
 }

@@ -35,6 +35,10 @@
             <tag name="shopware.scheduled.task"/>
         </service>
 
+        <service id="Frosh\AbandonedCart\ScheduledTask\CleanupAbandonedCartsTask">
+            <tag name="shopware.scheduled.task"/>
+        </service>
+
         <!-- Automation Conditions -->
         <service id="Frosh\AbandonedCart\Automation\Condition\CartAgeCondition">
             <tag name="frosh.abandoned_cart.condition"/>
@@ -86,6 +90,7 @@
             <argument type="service" id="frosh_abandoned_cart_automation.repository"/>
             <argument type="service" id="frosh_abandoned_cart.repository"/>
             <argument type="service" id="frosh_abandoned_cart_automation_log.repository"/>
+            <argument type="service" id="Doctrine\DBAL\Connection"/>
             <argument type="tagged_iterator" tag="frosh.abandoned_cart.condition"/>
             <argument type="tagged_iterator" tag="frosh.abandoned_cart.action"/>
             <argument type="service" id="logger"/>
@@ -94,6 +99,7 @@
         <!-- Automation Test Controller -->
         <service id="Frosh\AbandonedCart\Controller\Api\AbandonedCartAutomationTestController">
             <argument type="service" id="frosh_abandoned_cart.repository"/>
+            <argument type="service" id="Doctrine\DBAL\Connection"/>
             <argument type="tagged_iterator" tag="frosh.abandoned_cart.condition"/>
         </service>
 

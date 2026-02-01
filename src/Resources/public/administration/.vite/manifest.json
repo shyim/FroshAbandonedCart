@@ -1,8 +1,11 @@
 {
   "main.js": {
-    "file": "assets/frosh-cart-archiver-Dn1UO-ou.js",
-    "name": "frosh-cart-archiver",
+    "file": "assets/frosh-abandoned-cart-CK-W4K24.js",
+    "name": "frosh-abandoned-cart",
     "src": "main.js",
-    "isEntry": true
+    "isEntry": true,
+    "css": [
+      "assets/frosh-abandoned-cart-CyVYEU-G.css"
+    ]
   }
 }

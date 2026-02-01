@@ -3,6 +3,7 @@ import './page/frosh-abandoned-carts-detail';
 import './page/frosh-abandoned-carts-statistics';
 import './page/frosh-abandoned-carts-automation-list';
 import './page/frosh-abandoned-carts-automation-detail';
+import './page/frosh-abandoned-carts-settings';
 import './acl';
 
 Shopware.Module.register('frosh-abandoned-carts', {
@@ -71,6 +72,14 @@ Shopware.Module.register('frosh-abandoned-carts', {
                 parentPath: 'frosh.abandoned.carts.automations',
             },
         },
+        settings: {
+            component: 'frosh-abandoned-carts-settings',
+            path: 'settings',
+            meta: {
+                privilege: 'frosh_abandoned_carts:read',
+                parentPath: 'frosh.abandoned.carts.list',
+            },
+        },
     },
 
     navigation: [
@@ -101,6 +110,13 @@ Shopware.Module.register('frosh-abandoned-carts', {
             id: 'frosh-abandoned-carts-automations',
             path: 'frosh.abandoned.carts.automations',
             label: 'frosh-abandoned-carts.automations.title',
+            color: '#ff6b35',
+            parent: 'frosh-abandoned-carts',
+            privilege: 'frosh_abandoned_carts:read',
+        },
+        {
+            path: 'frosh.abandoned.carts.settings',
+            label: 'frosh-abandoned-carts.settings.title',
             color: '#ff6b35',
             parent: 'frosh-abandoned-carts',
             privilege: 'frosh_abandoned_carts:read',

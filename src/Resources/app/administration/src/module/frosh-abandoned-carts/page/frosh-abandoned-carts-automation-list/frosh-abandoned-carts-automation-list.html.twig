@@ -14,6 +14,16 @@
     </template>
     {% endblock %}
 
+    {% block frosh_abandoned_carts_automation_list_search_bar %}
+    <template #search-bar>
+        <sw-search-bar
+            :initialSearchType="$tc('frosh-abandoned-carts.automations.title')"
+            :initialSearch="searchTerm"
+            @search="onSearch"
+        />
+    </template>
+    {% endblock %}
+
     {% block frosh_abandoned_carts_automation_list_smart_bar_actions %}
     <template #smart-bar-actions>
         <mt-button
@@ -63,22 +73,18 @@
 
                 {% block frosh_abandoned_carts_automation_list_column_active %}
                 <template #column-active="{ item }">
-                    <mt-switch
-                        :checked="item.active"
-                        @change="onToggleActive(item)"
+                    <mt-icon
+                        v-if="item.active"
+                        name="regular-checkmark-xs"
+                        size="16px"
+                        color="#37d046"
                     />
-                </template>
-                {% endblock %}
-
-                {% block frosh_abandoned_carts_automation_list_column_conditions %}
-                <template #column-conditions="{ item }">
-                    {{ getConditionsSummary(item) }}
-                </template>
-                {% endblock %}
-
-                {% block frosh_abandoned_carts_automation_list_column_actions %}
-                <template #column-actions="{ item }">
-                    {{ getActionsSummary(item) }}
+                    <mt-icon
+                        v-else
+                        name="regular-times-s"
+                        size="16px"
+                        color="#de294c"
+                    />
                 </template>
                 {% endblock %}
 

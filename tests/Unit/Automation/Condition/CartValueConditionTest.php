@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Frosh\AbandonedCart\Tests\Unit\Automation\Condition;
 
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Frosh\AbandonedCart\Automation\Condition\CartValueCondition;
-use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
@@ -29,277 +30,169 @@ class CartValueConditionTest extends TestCase
         static::assertSame('cart_value', $this->condition->getType());
     }
 
-    #[DataProvider('operatorDataProvider')]
-    public function testEvaluateWithDifferentOperators(
-        string $operator,
-        float $cartTotalPrice,
-        float $configValue,
-        bool $expected
-    ): void {
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getTotalPrice')->willReturn($cartTotalPrice);
+    #[DataProvider('operatorMappingDataProvider')]
+    public function testApplyWithDifferentOperators(string $operator, string $expectedSqlOperator): void
+    {
+        $query = $this->createQueryBuilder();
 
         $config = [
             'operator' => $operator,
-            'value' => $configValue,
+            'value' => 100.0,
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertSame($expected, $result);
+        $sql = $query->getSQL();
+        static::assertStringContainsString("cart.total_price {$expectedSqlOperator}", $sql);
     }
 
     /**
-     * @return iterable<string, array{operator: string, cartTotalPrice: float, configValue: float, expected: bool}>
+     * @return iterable<string, array{operator: string, expectedSqlOperator: string}>
      */
-    public static function operatorDataProvider(): iterable
+    public static function operatorMappingDataProvider(): iterable
     {
-        // Greater than or equal (>=, gte)
-        yield 'gte operator - cart value equals threshold' => [
+        yield 'gte operator maps to >=' => [
             'operator' => '>=',
-            'cartTotalPrice' => 100.0,
-            'configValue' => 100.0,
-            'expected' => true,
+            'expectedSqlOperator' => '>=',
         ];
-        yield 'gte operator - cart value greater than threshold' => [
-            'operator' => '>=',
-            'cartTotalPrice' => 150.0,
-            'configValue' => 100.0,
-            'expected' => true,
-        ];
-        yield 'gte operator - cart value less than threshold' => [
-            'operator' => '>=',
-            'cartTotalPrice' => 50.0,
-            'configValue' => 100.0,
-            'expected' => false,
-        ];
-        yield 'gte alias - cart value equals threshold' => [
+        yield 'gte alias maps to >=' => [
             'operator' => 'gte',
-            'cartTotalPrice' => 100.0,
-            'configValue' => 100.0,
-            'expected' => true,
+            'expectedSqlOperator' => '>=',
         ];
-
-        // Less than or equal (<=, lte)
-        yield 'lte operator - cart value equals threshold' => [
+        yield 'lte operator maps to <=' => [
             'operator' => '<=',
-            'cartTotalPrice' => 100.0,
-            'configValue' => 100.0,
-            'expected' => true,
+            'expectedSqlOperator' => '<=',
         ];
-        yield 'lte operator - cart value less than threshold' => [
-            'operator' => '<=',
-            'cartTotalPrice' => 50.0,
-            'configValue' => 100.0,
-            'expected' => true,
-        ];
-        yield 'lte operator - cart value greater than threshold' => [
-            'operator' => '<=',
-            'cartTotalPrice' => 150.0,
-            'configValue' => 100.0,
-            'expected' => false,
-        ];
-        yield 'lte alias - cart value equals threshold' => [
+        yield 'lte alias maps to <=' => [
             'operator' => 'lte',
-            'cartTotalPrice' => 100.0,
-            'configValue' => 100.0,
-            'expected' => true,
+            'expectedSqlOperator' => '<=',
         ];
-
-        // Equal (==, eq) - uses floating point comparison with tolerance
-        yield 'eq operator - cart value equals threshold' => [
-            'operator' => '==',
-            'cartTotalPrice' => 100.0,
-            'configValue' => 100.0,
-            'expected' => true,
-        ];
-        yield 'eq operator - cart value not equal to threshold' => [
-            'operator' => '==',
-            'cartTotalPrice' => 100.5,
-            'configValue' => 100.0,
-            'expected' => false,
-        ];
-        yield 'eq operator - cart value within tolerance' => [
-            'operator' => '==',
-            'cartTotalPrice' => 100.0005,
-            'configValue' => 100.0,
-            'expected' => true,
-        ];
-        yield 'eq alias - cart value equals threshold' => [
-            'operator' => 'eq',
-            'cartTotalPrice' => 100.0,
-            'configValue' => 100.0,
-            'expected' => true,
-        ];
-
-        // Not equal (!=, neq) - uses floating point comparison with tolerance
-        yield 'neq operator - cart value not equal to threshold' => [
-            'operator' => '!=',
-            'cartTotalPrice' => 100.5,
-            'configValue' => 100.0,
-            'expected' => true,
-        ];
-        yield 'neq operator - cart value equals threshold' => [
-            'operator' => '!=',
-            'cartTotalPrice' => 100.0,
-            'configValue' => 100.0,
-            'expected' => false,
-        ];
-        yield 'neq operator - cart value within tolerance is equal' => [
-            'operator' => '!=',
-            'cartTotalPrice' => 100.0005,
-            'configValue' => 100.0,
-            'expected' => false,
-        ];
-        yield 'neq alias - cart value not equal to threshold' => [
-            'operator' => 'neq',
-            'cartTotalPrice' => 100.5,
-            'configValue' => 100.0,
-            'expected' => true,
-        ];
-
-        // Greater than (>, gt)
-        yield 'gt operator - cart value greater than threshold' => [
+        yield 'gt operator maps to >' => [
             'operator' => '>',
-            'cartTotalPrice' => 100.5,
-            'configValue' => 100.0,
-            'expected' => true,
+            'expectedSqlOperator' => '>',
         ];
-        yield 'gt operator - cart value equals threshold' => [
-            'operator' => '>',
-            'cartTotalPrice' => 100.0,
-            'configValue' => 100.0,
-            'expected' => false,
-        ];
-        yield 'gt operator - cart value less than threshold' => [
-            'operator' => '>',
-            'cartTotalPrice' => 99.5,
-            'configValue' => 100.0,
-            'expected' => false,
-        ];
-        yield 'gt alias - cart value greater than threshold' => [
+        yield 'gt alias maps to >' => [
             'operator' => 'gt',
-            'cartTotalPrice' => 100.5,
-            'configValue' => 100.0,
-            'expected' => true,
+            'expectedSqlOperator' => '>',
         ];
-
-        // Less than (<, lt)
-        yield 'lt operator - cart value less than threshold' => [
+        yield 'lt operator maps to <' => [
             'operator' => '<',
-            'cartTotalPrice' => 99.5,
-            'configValue' => 100.0,
-            'expected' => true,
+            'expectedSqlOperator' => '<',
         ];
-        yield 'lt operator - cart value equals threshold' => [
-            'operator' => '<',
-            'cartTotalPrice' => 100.0,
-            'configValue' => 100.0,
-            'expected' => false,
-        ];
-        yield 'lt operator - cart value greater than threshold' => [
-            'operator' => '<',
-            'cartTotalPrice' => 100.5,
-            'configValue' => 100.0,
-            'expected' => false,
-        ];
-        yield 'lt alias - cart value less than threshold' => [
+        yield 'lt alias maps to <' => [
             'operator' => 'lt',
-            'cartTotalPrice' => 99.5,
-            'configValue' => 100.0,
-            'expected' => true,
+            'expectedSqlOperator' => '<',
+        ];
+        yield 'eq operator maps to =' => [
+            'operator' => '==',
+            'expectedSqlOperator' => '=',
+        ];
+        yield 'eq alias maps to =' => [
+            'operator' => 'eq',
+            'expectedSqlOperator' => '=',
+        ];
+        yield 'neq operator maps to !=' => [
+            'operator' => '!=',
+            'expectedSqlOperator' => '!=',
+        ];
+        yield 'neq alias maps to !=' => [
+            'operator' => 'neq',
+            'expectedSqlOperator' => '!=',
         ];
     }
 
-    public function testEvaluateWithDefaultValues(): void
+    public function testApplyWithDefaultValues(): void
     {
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getTotalPrice')->willReturn(50.0);
+        $query = $this->createQueryBuilder();
 
-        // Default operator is >=, default value is 0
-        $result = $this->condition->evaluate($cart, [], $this->context);
+        // Empty config should use defaults: operator >= , value 0
+        $this->condition->apply($query, [], $this->context);
 
-        static::assertTrue($result);
+        $sql = $query->getSQL();
+        static::assertStringContainsString('cart.total_price >=', $sql);
+
+        $params = $query->getParameters();
+        static::assertCount(1, $params);
+        static::assertEquals(0.0, array_values($params)[0]);
     }
 
-    public function testEvaluateWithZeroCartValue(): void
+    public function testApplyWithUnknownOperatorDefaultsToGte(): void
     {
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getTotalPrice')->willReturn(0.0);
-
-        $config = [
-            'operator' => '>=',
-            'value' => 0.0,
-        ];
-
-        $result = $this->condition->evaluate($cart, $config, $this->context);
-
-        static::assertTrue($result);
-    }
-
-    public function testEvaluateWithUnknownOperatorReturnsFalse(): void
-    {
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getTotalPrice')->willReturn(100.0);
+        $query = $this->createQueryBuilder();
 
         $config = [
             'operator' => 'invalid_operator',
             'value' => 50.0,
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertFalse($result);
+        $sql = $query->getSQL();
+        static::assertStringContainsString('cart.total_price >=', $sql);
     }
 
-    #[DataProvider('floatingPointEdgeCaseDataProvider')]
-    public function testEvaluateFloatingPointEdgeCases(
-        string $operator,
-        float $cartTotalPrice,
-        float $configValue,
-        bool $expected
-    ): void {
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getTotalPrice')->willReturn($cartTotalPrice);
+    public function testApplyWithZeroValue(): void
+    {
+        $query = $this->createQueryBuilder();
 
         $config = [
-            'operator' => $operator,
-            'value' => $configValue,
+            'operator' => '>=',
+            'value' => 0.0,
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertSame($expected, $result);
+        $params = $query->getParameters();
+        static::assertCount(1, $params);
+        static::assertEquals(0.0, array_values($params)[0]);
     }
 
-    /**
-     * @return iterable<string, array{operator: string, cartTotalPrice: float, configValue: float, expected: bool}>
-     */
-    public static function floatingPointEdgeCaseDataProvider(): iterable
+    public function testApplyWithFloatValue(): void
     {
-        yield 'very small difference should be equal' => [
-            'operator' => '==',
-            'cartTotalPrice' => 99.999999,
-            'configValue' => 100.0,
-            'expected' => true,
-        ];
-        yield 'very small difference should not be not equal' => [
-            'operator' => '!=',
-            'cartTotalPrice' => 99.999999,
-            'configValue' => 100.0,
-            'expected' => false,
-        ];
-        yield 'large values with small difference' => [
-            'operator' => '==',
-            'cartTotalPrice' => 10000.0001,
-            'configValue' => 10000.0,
-            'expected' => true,
-        ];
-        yield 'negative values' => [
+        $query = $this->createQueryBuilder();
+
+        $config = [
             'operator' => '>=',
-            'cartTotalPrice' => -50.0,
-            'configValue' => -100.0,
-            'expected' => true,
+            'value' => 99.99,
         ];
+
+        $this->condition->apply($query, $config, $this->context);
+
+        $params = $query->getParameters();
+        static::assertCount(1, $params);
+        static::assertEquals(99.99, array_values($params)[0]);
+    }
+
+    public function testApplyAddsWhereClauseWithParameter(): void
+    {
+        $query = $this->createQueryBuilder();
+
+        $config = [
+            'operator' => '>=',
+            'value' => 100.0,
+        ];
+
+        $this->condition->apply($query, $config, $this->context);
+
+        $sql = $query->getSQL();
+        $params = $query->getParameters();
+
+        // Should have a WHERE clause
+        static::assertStringContainsString('WHERE', $sql);
+        static::assertStringContainsString('cart.total_price', $sql);
+
+        // Should have exactly one parameter
+        static::assertCount(1, $params);
+        static::assertEquals(100.0, array_values($params)[0]);
+    }
+
+    private function createQueryBuilder(): QueryBuilder
+    {
+        $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+        $query = $connection->createQueryBuilder();
+        $query->select('cart.id')
+            ->from('frosh_abandoned_cart', 'cart');
+
+        return $query;
     }
 }

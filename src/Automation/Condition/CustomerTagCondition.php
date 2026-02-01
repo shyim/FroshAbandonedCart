@@ -4,55 +4,36 @@ declare(strict_types=1);
 
 namespace Frosh\AbandonedCart\Automation\Condition;
 
-use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
-use Shopware\Core\Checkout\Customer\CustomerCollection;
-use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
+use Doctrine\DBAL\Query\QueryBuilder;
+use Shopware\Core\Framework\Context;
+use Shopware\Core\Framework\Uuid\Uuid;
 
 class CustomerTagCondition implements ConditionInterface
 {
-    /**
-     * @param EntityRepository<CustomerCollection> $customerRepository
-     */
-    public function __construct(
-        private readonly EntityRepository $customerRepository
-    ) {
-    }
-
     public function getType(): string
     {
         return 'customer_tag';
     }
 
-    /**
-     * @param array<string, mixed> $config
-     */
-    public function evaluate(AbandonedCartEntity $cart, array $config, \Shopware\Core\Framework\Context $context): bool
+    public function apply(QueryBuilder $query, array $config, Context $context): void
     {
         $tagId = $config['tagId'] ?? null;
         $negate = (bool) ($config['negate'] ?? false);
 
         if ($tagId === null) {
-            return false;
+            return;
         }
 
-        $customerId = $cart->getCustomerId();
-        $criteria = new Criteria([$customerId]);
-        $criteria->addAssociation('tags');
+        $paramName = 'customer_tag_' . uniqid();
 
-        $customer = $this->customerRepository->search($criteria, $context)->getEntities()->first();
+        $subQuery = 'SELECT 1 FROM customer_tag WHERE customer_tag.customer_id = cart.customer_id AND customer_tag.tag_id = :' . $paramName;
 
-        if ($customer === null) {
-            return $negate;
+        if ($negate) {
+            $query->andWhere("NOT EXISTS ({$subQuery})");
+        } else {
+            $query->andWhere("EXISTS ({$subQuery})");
         }
 
-        $tags = $customer->getTags();
-        if ($tags === null) {
-            return $negate;
-        }
-
-        $hasTag = $tags->has($tagId);
-
-        return $negate ? !$hasTag : $hasTag;
+        $query->setParameter($paramName, Uuid::fromHexToBytes($tagId));
     }
 }

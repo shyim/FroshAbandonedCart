@@ -1,0 +1,11 @@
+{% block sw_customer_detail_content_tab_after %}
+{% parent() %}
+
+<sw-tabs-item
+    class="sw-customer-detail__tab-abandoned-carts"
+    :route="abandonedCartsRoute"
+    :title="$tc('frosh-abandoned-carts.customer.tabTitle')"
+>
+    {{ $tc('frosh-abandoned-carts.customer.tabTitle') }}
+</sw-tabs-item>
+{% endblock %}

@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace Frosh\AbandonedCart\Tests\Unit\Automation\Condition;
 
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Frosh\AbandonedCart\Automation\Condition\LineItemCountCondition;
-use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
-use Frosh\AbandonedCart\Entity\AbandonedCartLineItemCollection;
-use Frosh\AbandonedCart\Entity\AbandonedCartLineItemEntity;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Shopware\Core\Framework\Context;
-use Shopware\Core\Framework\Uuid\Uuid;
 
 #[CoversClass(LineItemCountCondition::class)]
 class LineItemCountConditionTest extends TestCase
@@ -32,244 +30,144 @@ class LineItemCountConditionTest extends TestCase
         static::assertSame('line_item_count', $this->condition->getType());
     }
 
-    public function testEvaluateReturnsZeroCountWhenLineItemsIsNull(): void
+    #[DataProvider('operatorMappingDataProvider')]
+    public function testApplyWithDifferentOperators(string $operator, string $expectedSqlOperator): void
     {
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLineItems')->willReturn(null);
-
-        // With null line items, count should be 0
-        $result = $this->condition->evaluate($cart, ['operator' => '==', 'value' => 0], $this->context);
-        static::assertTrue($result);
-
-        $result = $this->condition->evaluate($cart, ['operator' => '>=', 'value' => 1], $this->context);
-        static::assertFalse($result);
-    }
-
-    #[DataProvider('operatorDataProvider')]
-    public function testEvaluateWithDifferentOperators(
-        string $operator,
-        int $lineItemCount,
-        int $configValue,
-        bool $expected
-    ): void {
-        $lineItems = $this->createLineItemCollection($lineItemCount);
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLineItems')->willReturn($lineItems);
+        $query = $this->createQueryBuilder();
 
         $config = [
             'operator' => $operator,
-            'value' => $configValue,
+            'value' => 5,
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertSame($expected, $result);
+        $sql = $query->getSQL();
+        static::assertStringContainsString($expectedSqlOperator, $sql);
     }
 
     /**
-     * @return iterable<string, array{operator: string, lineItemCount: int, configValue: int, expected: bool}>
+     * @return iterable<string, array{operator: string, expectedSqlOperator: string}>
      */
-    public static function operatorDataProvider(): iterable
+    public static function operatorMappingDataProvider(): iterable
     {
-        // Greater than or equal (>=, gte)
-        yield 'gte operator - count equals threshold' => [
+        yield 'gte operator maps to >=' => [
             'operator' => '>=',
-            'lineItemCount' => 5,
-            'configValue' => 5,
-            'expected' => true,
+            'expectedSqlOperator' => '>=',
         ];
-        yield 'gte operator - count greater than threshold' => [
-            'operator' => '>=',
-            'lineItemCount' => 10,
-            'configValue' => 5,
-            'expected' => true,
-        ];
-        yield 'gte operator - count less than threshold' => [
-            'operator' => '>=',
-            'lineItemCount' => 3,
-            'configValue' => 5,
-            'expected' => false,
-        ];
-        yield 'gte alias - count equals threshold' => [
+        yield 'gte alias maps to >=' => [
             'operator' => 'gte',
-            'lineItemCount' => 5,
-            'configValue' => 5,
-            'expected' => true,
+            'expectedSqlOperator' => '>=',
         ];
-
-        // Less than or equal (<=, lte)
-        yield 'lte operator - count equals threshold' => [
+        yield 'lte operator maps to <=' => [
             'operator' => '<=',
-            'lineItemCount' => 5,
-            'configValue' => 5,
-            'expected' => true,
+            'expectedSqlOperator' => '<=',
         ];
-        yield 'lte operator - count less than threshold' => [
-            'operator' => '<=',
-            'lineItemCount' => 3,
-            'configValue' => 5,
-            'expected' => true,
-        ];
-        yield 'lte operator - count greater than threshold' => [
-            'operator' => '<=',
-            'lineItemCount' => 10,
-            'configValue' => 5,
-            'expected' => false,
-        ];
-        yield 'lte alias - count equals threshold' => [
+        yield 'lte alias maps to <=' => [
             'operator' => 'lte',
-            'lineItemCount' => 5,
-            'configValue' => 5,
-            'expected' => true,
+            'expectedSqlOperator' => '<=',
         ];
-
-        // Equal (==, eq)
-        yield 'eq operator - count equals threshold' => [
-            'operator' => '==',
-            'lineItemCount' => 5,
-            'configValue' => 5,
-            'expected' => true,
-        ];
-        yield 'eq operator - count not equal to threshold' => [
-            'operator' => '==',
-            'lineItemCount' => 6,
-            'configValue' => 5,
-            'expected' => false,
-        ];
-        yield 'eq alias - count equals threshold' => [
-            'operator' => 'eq',
-            'lineItemCount' => 5,
-            'configValue' => 5,
-            'expected' => true,
-        ];
-
-        // Not equal (!=, neq)
-        yield 'neq operator - count not equal to threshold' => [
-            'operator' => '!=',
-            'lineItemCount' => 6,
-            'configValue' => 5,
-            'expected' => true,
-        ];
-        yield 'neq operator - count equals threshold' => [
-            'operator' => '!=',
-            'lineItemCount' => 5,
-            'configValue' => 5,
-            'expected' => false,
-        ];
-        yield 'neq alias - count not equal to threshold' => [
-            'operator' => 'neq',
-            'lineItemCount' => 6,
-            'configValue' => 5,
-            'expected' => true,
-        ];
-
-        // Greater than (>, gt)
-        yield 'gt operator - count greater than threshold' => [
+        yield 'gt operator maps to >' => [
             'operator' => '>',
-            'lineItemCount' => 6,
-            'configValue' => 5,
-            'expected' => true,
+            'expectedSqlOperator' => '>',
         ];
-        yield 'gt operator - count equals threshold' => [
-            'operator' => '>',
-            'lineItemCount' => 5,
-            'configValue' => 5,
-            'expected' => false,
-        ];
-        yield 'gt operator - count less than threshold' => [
-            'operator' => '>',
-            'lineItemCount' => 4,
-            'configValue' => 5,
-            'expected' => false,
-        ];
-        yield 'gt alias - count greater than threshold' => [
+        yield 'gt alias maps to >' => [
             'operator' => 'gt',
-            'lineItemCount' => 6,
-            'configValue' => 5,
-            'expected' => true,
+            'expectedSqlOperator' => '>',
         ];
-
-        // Less than (<, lt)
-        yield 'lt operator - count less than threshold' => [
+        yield 'lt operator maps to <' => [
             'operator' => '<',
-            'lineItemCount' => 4,
-            'configValue' => 5,
-            'expected' => true,
+            'expectedSqlOperator' => '<',
         ];
-        yield 'lt operator - count equals threshold' => [
-            'operator' => '<',
-            'lineItemCount' => 5,
-            'configValue' => 5,
-            'expected' => false,
-        ];
-        yield 'lt operator - count greater than threshold' => [
-            'operator' => '<',
-            'lineItemCount' => 6,
-            'configValue' => 5,
-            'expected' => false,
-        ];
-        yield 'lt alias - count less than threshold' => [
+        yield 'lt alias maps to <' => [
             'operator' => 'lt',
-            'lineItemCount' => 4,
-            'configValue' => 5,
-            'expected' => true,
+            'expectedSqlOperator' => '<',
         ];
-    }
-
-    public function testEvaluateWithDefaultValues(): void
-    {
-        $lineItems = $this->createLineItemCollection(2);
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLineItems')->willReturn($lineItems);
-
-        // Default operator is >=, default value is 1
-        $result = $this->condition->evaluate($cart, [], $this->context);
-
-        static::assertTrue($result);
-    }
-
-    public function testEvaluateWithEmptyLineItemCollection(): void
-    {
-        $lineItems = new AbandonedCartLineItemCollection([]);
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLineItems')->willReturn($lineItems);
-
-        $config = [
+        yield 'eq operator maps to =' => [
             'operator' => '==',
-            'value' => 0,
+            'expectedSqlOperator' => '=',
         ];
-
-        $result = $this->condition->evaluate($cart, $config, $this->context);
-
-        static::assertTrue($result);
+        yield 'eq alias maps to =' => [
+            'operator' => 'eq',
+            'expectedSqlOperator' => '=',
+        ];
+        yield 'neq operator maps to !=' => [
+            'operator' => '!=',
+            'expectedSqlOperator' => '!=',
+        ];
+        yield 'neq alias maps to !=' => [
+            'operator' => 'neq',
+            'expectedSqlOperator' => '!=',
+        ];
     }
 
-    public function testEvaluateWithUnknownOperatorReturnsFalse(): void
+    public function testApplyWithDefaultValues(): void
     {
-        $lineItems = $this->createLineItemCollection(5);
+        $query = $this->createQueryBuilder();
 
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLineItems')->willReturn($lineItems);
+        // Empty config should use defaults: operator >= , value 1
+        $this->condition->apply($query, [], $this->context);
+
+        $sql = $query->getSQL();
+        static::assertStringContainsString('>=', $sql);
+
+        $params = $query->getParameters();
+        static::assertCount(1, $params);
+        static::assertSame(1, array_values($params)[0]);
+    }
+
+    public function testApplyWithUnknownOperatorDefaultsToGte(): void
+    {
+        $query = $this->createQueryBuilder();
 
         $config = [
             'operator' => 'invalid_operator',
             'value' => 5,
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertFalse($result);
+        $sql = $query->getSQL();
+        static::assertStringContainsString('>=', $sql);
     }
 
-    public function testEvaluateMinimumItemsRequired(): void
+    public function testApplyUsesSubquery(): void
     {
-        $lineItems = $this->createLineItemCollection(3);
+        $query = $this->createQueryBuilder();
 
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLineItems')->willReturn($lineItems);
+        $config = [
+            'operator' => '>=',
+            'value' => 1,
+        ];
+
+        $this->condition->apply($query, $config, $this->context);
+
+        $sql = $query->getSQL();
+
+        // Should use a subquery to count line items
+        static::assertStringContainsString('SELECT COUNT(*) FROM frosh_abandoned_cart_line_item', $sql);
+        static::assertStringContainsString('abandoned_cart_id = cart.id', $sql);
+    }
+
+    public function testApplyWithZeroValue(): void
+    {
+        $query = $this->createQueryBuilder();
+
+        $config = [
+            'operator' => '==',
+            'value' => 0,
+        ];
+
+        $this->condition->apply($query, $config, $this->context);
+
+        $params = $query->getParameters();
+        static::assertCount(1, $params);
+        static::assertSame(0, array_values($params)[0]);
+    }
+
+    public function testApplyMinimumItemsRequired(): void
+    {
+        $query = $this->createQueryBuilder();
 
         // Require at least 5 items
         $config = [
@@ -277,35 +175,19 @@ class LineItemCountConditionTest extends TestCase
             'value' => 5,
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertFalse($result);
+        $sql = $query->getSQL();
+        $params = $query->getParameters();
+
+        static::assertStringContainsString('SELECT COUNT(*) FROM frosh_abandoned_cart_line_item', $sql);
+        static::assertStringContainsString('>=', $sql);
+        static::assertSame(5, array_values($params)[0]);
     }
 
-    public function testEvaluateMinimumItemsRequiredPasses(): void
+    public function testApplyMaximumItemsLimit(): void
     {
-        $lineItems = $this->createLineItemCollection(5);
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLineItems')->willReturn($lineItems);
-
-        // Require at least 5 items
-        $config = [
-            'operator' => '>=',
-            'value' => 5,
-        ];
-
-        $result = $this->condition->evaluate($cart, $config, $this->context);
-
-        static::assertTrue($result);
-    }
-
-    public function testEvaluateMaximumItemsLimit(): void
-    {
-        $lineItems = $this->createLineItemCollection(15);
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLineItems')->willReturn($lineItems);
+        $query = $this->createQueryBuilder();
 
         // Cart should have at most 10 items
         $config = [
@@ -313,17 +195,19 @@ class LineItemCountConditionTest extends TestCase
             'value' => 10,
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertFalse($result);
+        $sql = $query->getSQL();
+        $params = $query->getParameters();
+
+        static::assertStringContainsString('SELECT COUNT(*) FROM frosh_abandoned_cart_line_item', $sql);
+        static::assertStringContainsString('<=', $sql);
+        static::assertSame(10, array_values($params)[0]);
     }
 
-    public function testEvaluateSingleItemCart(): void
+    public function testApplyExactItemCount(): void
     {
-        $lineItems = $this->createLineItemCollection(1);
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLineItems')->willReturn($lineItems);
+        $query = $this->createQueryBuilder();
 
         // Check for exactly 1 item
         $config = [
@@ -331,42 +215,45 @@ class LineItemCountConditionTest extends TestCase
             'value' => 1,
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertTrue($result);
+        $sql = $query->getSQL();
+        $params = $query->getParameters();
+
+        static::assertStringContainsString('SELECT COUNT(*) FROM frosh_abandoned_cart_line_item', $sql);
+        static::assertStringContainsString('=', $sql);
+        static::assertSame(1, array_values($params)[0]);
     }
 
-    public function testEvaluateLargeCart(): void
+    public function testApplyAddsWhereClauseWithParameter(): void
     {
-        $lineItems = $this->createLineItemCollection(100);
+        $query = $this->createQueryBuilder();
 
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getLineItems')->willReturn($lineItems);
-
-        // Check for at least 50 items
         $config = [
             'operator' => '>=',
-            'value' => 50,
+            'value' => 3,
         ];
 
-        $result = $this->condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertTrue($result);
+        $sql = $query->getSQL();
+        $params = $query->getParameters();
+
+        // Should have a WHERE clause
+        static::assertStringContainsString('WHERE', $sql);
+
+        // Should have exactly one parameter
+        static::assertCount(1, $params);
+        static::assertSame(3, array_values($params)[0]);
     }
 
-    private function createLineItemCollection(int $count): AbandonedCartLineItemCollection
+    private function createQueryBuilder(): QueryBuilder
     {
-        $items = [];
+        $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+        $query = $connection->createQueryBuilder();
+        $query->select('cart.id')
+            ->from('frosh_abandoned_cart', 'cart');
 
-        for ($i = 0; $i < $count; $i++) {
-            $item = new AbandonedCartLineItemEntity();
-            $item->setId(Uuid::randomHex());
-            $item->setAbandonedCartId(Uuid::randomHex());
-            $item->setType('product');
-            $item->setQuantity(1);
-            $items[] = $item;
-        }
-
-        return new AbandonedCartLineItemCollection($items);
+        return $query;
     }
 }

@@ -4,293 +4,207 @@ declare(strict_types=1);
 
 namespace Frosh\AbandonedCart\Tests\Unit\Automation\Condition;
 
+use Doctrine\DBAL\DriverManager;
+use Doctrine\DBAL\Query\QueryBuilder;
 use Frosh\AbandonedCart\Automation\Condition\CustomerTagCondition;
-use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
-use Shopware\Core\Checkout\Customer\CustomerCollection;
-use Shopware\Core\Checkout\Customer\CustomerEntity;
 use Shopware\Core\Framework\Context;
-use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\EntitySearchResult;
 use Shopware\Core\Framework\Uuid\Uuid;
-use Shopware\Core\System\Tag\TagCollection;
-use Shopware\Core\System\Tag\TagEntity;
 
 #[CoversClass(CustomerTagCondition::class)]
 class CustomerTagConditionTest extends TestCase
 {
+    private CustomerTagCondition $condition;
+
     private Context $context;
 
     protected function setUp(): void
     {
+        $this->condition = new CustomerTagCondition();
         $this->context = Context::createDefaultContext();
     }
 
     public function testGetType(): void
     {
-        $customerRepository = $this->createMock(EntityRepository::class);
-        $condition = new CustomerTagCondition($customerRepository);
-
-        static::assertSame('customer_tag', $condition->getType());
+        static::assertSame('customer_tag', $this->condition->getType());
     }
 
-    public function testEvaluateReturnsFalseWhenTagIdIsNull(): void
+    public function testApplyDoesNothingWhenTagIdIsNull(): void
     {
-        $customerRepository = $this->createMock(EntityRepository::class);
-        $condition = new CustomerTagCondition($customerRepository);
+        $query = $this->createQueryBuilder();
 
-        $cart = $this->createMock(AbandonedCartEntity::class);
+        $this->condition->apply($query, ['tagId' => null], $this->context);
 
-        $result = $condition->evaluate($cart, ['tagId' => null], $this->context);
+        $sql = $query->getSQL();
+        $params = $query->getParameters();
 
-        static::assertFalse($result);
+        // Should not add any WHERE clause
+        static::assertStringNotContainsString('WHERE', $sql);
+        static::assertEmpty($params);
     }
 
-    public function testEvaluateReturnsFalseWhenTagIdIsMissing(): void
+    public function testApplyDoesNothingWhenTagIdIsMissing(): void
     {
-        $customerRepository = $this->createMock(EntityRepository::class);
-        $condition = new CustomerTagCondition($customerRepository);
+        $query = $this->createQueryBuilder();
 
-        $cart = $this->createMock(AbandonedCartEntity::class);
+        $this->condition->apply($query, [], $this->context);
 
-        $result = $condition->evaluate($cart, [], $this->context);
+        $sql = $query->getSQL();
+        $params = $query->getParameters();
 
-        static::assertFalse($result);
+        // Should not add any WHERE clause
+        static::assertStringNotContainsString('WHERE', $sql);
+        static::assertEmpty($params);
     }
 
-    public function testEvaluateReturnsNegateWhenCustomerNotFound(): void
+    public function testApplyWithExistsSubquery(): void
     {
-        $customerId = Uuid::randomHex();
+        $query = $this->createQueryBuilder();
         $tagId = Uuid::randomHex();
 
-        $customerCollection = new CustomerCollection([]);
-        $searchResult = $this->createMock(EntitySearchResult::class);
-        $searchResult->method('getEntities')->willReturn($customerCollection);
+        $config = [
+            'tagId' => $tagId,
+            'negate' => false,
+        ];
 
-        $customerRepository = $this->createMock(EntityRepository::class);
-        $customerRepository->method('search')->willReturn($searchResult);
+        $this->condition->apply($query, $config, $this->context);
 
-        $condition = new CustomerTagCondition($customerRepository);
+        $sql = $query->getSQL();
+        $params = $query->getParameters();
 
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getCustomerId')->willReturn($customerId);
+        // Should use EXISTS subquery
+        static::assertStringContainsString('EXISTS', $sql);
+        static::assertStringContainsString('SELECT 1 FROM customer_tag', $sql);
+        static::assertStringContainsString('customer_tag.customer_id = cart.customer_id', $sql);
+        static::assertStringContainsString('customer_tag.tag_id', $sql);
 
-        // When negate is false and customer not found, return false
-        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => false], $this->context);
-        static::assertFalse($result);
-
-        // When negate is true and customer not found, return true
-        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => true], $this->context);
-        static::assertTrue($result);
+        // Should have parameter for tag_id (as bytes)
+        static::assertCount(1, $params);
+        static::assertEquals(Uuid::fromHexToBytes($tagId), array_values($params)[0]);
     }
 
-    public function testEvaluateReturnsNegateWhenTagsIsNull(): void
+    public function testApplyWithNegatedCondition(): void
     {
-        $customerId = Uuid::randomHex();
+        $query = $this->createQueryBuilder();
         $tagId = Uuid::randomHex();
 
-        $customer = $this->createMock(CustomerEntity::class);
-        $customer->method('getTags')->willReturn(null);
+        $config = [
+            'tagId' => $tagId,
+            'negate' => true,
+        ];
 
-        $customerCollection = new CustomerCollection([$customer]);
-        $searchResult = $this->createMock(EntitySearchResult::class);
-        $searchResult->method('getEntities')->willReturn($customerCollection);
+        $this->condition->apply($query, $config, $this->context);
 
-        $customerRepository = $this->createMock(EntityRepository::class);
-        $customerRepository->method('search')->willReturn($searchResult);
+        $sql = $query->getSQL();
 
-        $condition = new CustomerTagCondition($customerRepository);
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getCustomerId')->willReturn($customerId);
-
-        // When negate is false and tags is null, return false
-        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => false], $this->context);
-        static::assertFalse($result);
-
-        // When negate is true and tags is null, return true
-        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => true], $this->context);
-        static::assertTrue($result);
+        // Should use NOT EXISTS subquery
+        static::assertStringContainsString('NOT EXISTS', $sql);
+        static::assertStringContainsString('SELECT 1 FROM customer_tag', $sql);
     }
 
-    #[DataProvider('tagConditionDataProvider')]
-    public function testEvaluateWithTagConditions(
-        bool $hasTag,
-        bool $negate,
-        bool $expected
-    ): void {
-        $customerId = Uuid::randomHex();
+    #[DataProvider('negateDataProvider')]
+    public function testApplyWithDifferentNegateValues(mixed $negate, bool $expectNotExists): void
+    {
+        $query = $this->createQueryBuilder();
         $tagId = Uuid::randomHex();
-
-        $tag = new TagEntity();
-        $tag->setId($tagId);
-        $tag->setName('Test Tag');
-
-        $tags = new TagCollection($hasTag ? [$tag] : []);
-
-        $customer = $this->createMock(CustomerEntity::class);
-        $customer->method('getTags')->willReturn($tags);
-
-        $customerCollection = new CustomerCollection([$customer]);
-        $searchResult = $this->createMock(EntitySearchResult::class);
-        $searchResult->method('getEntities')->willReturn($customerCollection);
-
-        $customerRepository = $this->createMock(EntityRepository::class);
-        $customerRepository->method('search')->willReturn($searchResult);
-
-        $condition = new CustomerTagCondition($customerRepository);
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getCustomerId')->willReturn($customerId);
 
         $config = [
             'tagId' => $tagId,
             'negate' => $negate,
         ];
 
-        $result = $condition->evaluate($cart, $config, $this->context);
+        $this->condition->apply($query, $config, $this->context);
 
-        static::assertSame($expected, $result);
+        $sql = $query->getSQL();
+
+        if ($expectNotExists) {
+            static::assertStringContainsString('NOT EXISTS', $sql);
+        } else {
+            static::assertStringContainsString('EXISTS', $sql);
+            static::assertStringNotContainsString('NOT EXISTS', $sql);
+        }
     }
 
     /**
-     * @return iterable<string, array{hasTag: bool, negate: bool, expected: bool}>
+     * @return iterable<string, array{negate: mixed, expectNotExists: bool}>
      */
-    public static function tagConditionDataProvider(): iterable
+    public static function negateDataProvider(): iterable
     {
-        yield 'customer has tag - not negated - returns true' => [
-            'hasTag' => true,
-            'negate' => false,
-            'expected' => true,
-        ];
-        yield 'customer has tag - negated - returns false' => [
-            'hasTag' => true,
+        yield 'negate true' => [
             'negate' => true,
-            'expected' => false,
+            'expectNotExists' => true,
         ];
-        yield 'customer does not have tag - not negated - returns false' => [
-            'hasTag' => false,
+        yield 'negate false' => [
             'negate' => false,
-            'expected' => false,
+            'expectNotExists' => false,
         ];
-        yield 'customer does not have tag - negated - returns true' => [
-            'hasTag' => false,
-            'negate' => true,
-            'expected' => true,
+        yield 'negate truthy string' => [
+            'negate' => '1',
+            'expectNotExists' => true,
+        ];
+        yield 'negate falsy string' => [
+            'negate' => '0',
+            'expectNotExists' => false,
+        ];
+        yield 'negate empty string' => [
+            'negate' => '',
+            'expectNotExists' => false,
         ];
     }
 
-    public function testEvaluateWithDefaultNegate(): void
+    public function testApplyWithDefaultNegate(): void
     {
-        $customerId = Uuid::randomHex();
+        $query = $this->createQueryBuilder();
         $tagId = Uuid::randomHex();
-
-        $tag = new TagEntity();
-        $tag->setId($tagId);
-        $tag->setName('Test Tag');
-
-        $tags = new TagCollection([$tag]);
-
-        $customer = $this->createMock(CustomerEntity::class);
-        $customer->method('getTags')->willReturn($tags);
-
-        $customerCollection = new CustomerCollection([$customer]);
-        $searchResult = $this->createMock(EntitySearchResult::class);
-        $searchResult->method('getEntities')->willReturn($customerCollection);
-
-        $customerRepository = $this->createMock(EntityRepository::class);
-        $customerRepository->method('search')->willReturn($searchResult);
-
-        $condition = new CustomerTagCondition($customerRepository);
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getCustomerId')->willReturn($customerId);
 
         // Default negate is false
-        $result = $condition->evaluate($cart, ['tagId' => $tagId], $this->context);
+        $config = [
+            'tagId' => $tagId,
+        ];
 
-        static::assertTrue($result);
+        $this->condition->apply($query, $config, $this->context);
+
+        $sql = $query->getSQL();
+
+        // Should use EXISTS (not NOT EXISTS)
+        static::assertStringContainsString('EXISTS', $sql);
+        static::assertStringNotContainsString('NOT EXISTS', $sql);
     }
 
-    public function testEvaluateWithMultipleTags(): void
+    public function testApplyAddsWhereClauseWithParameter(): void
     {
-        $customerId = Uuid::randomHex();
-        $tagId1 = Uuid::randomHex();
-        $tagId2 = Uuid::randomHex();
-        $tagId3 = Uuid::randomHex();
-
-        $tag1 = new TagEntity();
-        $tag1->setId($tagId1);
-        $tag1->setName('Tag 1');
-
-        $tag2 = new TagEntity();
-        $tag2->setId($tagId2);
-        $tag2->setName('Tag 2');
-
-        $tags = new TagCollection([$tag1, $tag2]);
-
-        $customer = $this->createMock(CustomerEntity::class);
-        $customer->method('getTags')->willReturn($tags);
-
-        $customerCollection = new CustomerCollection([$customer]);
-        $searchResult = $this->createMock(EntitySearchResult::class);
-        $searchResult->method('getEntities')->willReturn($customerCollection);
-
-        $customerRepository = $this->createMock(EntityRepository::class);
-        $customerRepository->method('search')->willReturn($searchResult);
-
-        $condition = new CustomerTagCondition($customerRepository);
-
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getCustomerId')->willReturn($customerId);
-
-        // Check for tag that customer has
-        $result = $condition->evaluate($cart, ['tagId' => $tagId1, 'negate' => false], $this->context);
-        static::assertTrue($result);
-
-        // Check for another tag that customer has
-        $result = $condition->evaluate($cart, ['tagId' => $tagId2, 'negate' => false], $this->context);
-        static::assertTrue($result);
-
-        // Check for tag that customer does not have
-        $result = $condition->evaluate($cart, ['tagId' => $tagId3, 'negate' => false], $this->context);
-        static::assertFalse($result);
-    }
-
-    public function testEvaluateWithNegateAsString(): void
-    {
-        $customerId = Uuid::randomHex();
+        $query = $this->createQueryBuilder();
         $tagId = Uuid::randomHex();
 
-        $tag = new TagEntity();
-        $tag->setId($tagId);
-        $tag->setName('Test Tag');
+        $config = [
+            'tagId' => $tagId,
+            'negate' => false,
+        ];
 
-        $tags = new TagCollection([$tag]);
+        $this->condition->apply($query, $config, $this->context);
 
-        $customer = $this->createMock(CustomerEntity::class);
-        $customer->method('getTags')->willReturn($tags);
+        $sql = $query->getSQL();
+        $params = $query->getParameters();
 
-        $customerCollection = new CustomerCollection([$customer]);
-        $searchResult = $this->createMock(EntitySearchResult::class);
-        $searchResult->method('getEntities')->willReturn($customerCollection);
+        // Should have a WHERE clause
+        static::assertStringContainsString('WHERE', $sql);
 
-        $customerRepository = $this->createMock(EntityRepository::class);
-        $customerRepository->method('search')->willReturn($searchResult);
+        // Should have exactly one parameter
+        static::assertCount(1, $params);
 
-        $condition = new CustomerTagCondition($customerRepository);
+        // Parameter should be binary representation of tag ID
+        static::assertEquals(Uuid::fromHexToBytes($tagId), array_values($params)[0]);
+    }
 
-        $cart = $this->createMock(AbandonedCartEntity::class);
-        $cart->method('getCustomerId')->willReturn($customerId);
+    private function createQueryBuilder(): QueryBuilder
+    {
+        $connection = DriverManager::getConnection(['driver' => 'pdo_sqlite', 'memory' => true]);
+        $query = $connection->createQueryBuilder();
+        $query->select('cart.id')
+            ->from('frosh_abandoned_cart', 'cart');
 
-        // Test with negate as truthy string value (will be cast to bool)
-        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => '1'], $this->context);
-        static::assertFalse($result);
-
-        // Test with negate as falsy string value
-        $result = $condition->evaluate($cart, ['tagId' => $tagId, 'negate' => '0'], $this->context);
-        static::assertTrue($result);
+        return $query;
     }
 }

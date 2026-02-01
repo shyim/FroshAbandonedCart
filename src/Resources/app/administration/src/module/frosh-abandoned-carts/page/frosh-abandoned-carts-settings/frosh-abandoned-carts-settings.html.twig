@@ -1,0 +1,41 @@
+{% block frosh_abandoned_carts_settings %}
+<sw-page class="frosh-abandoned-carts-settings">
+    {% block frosh_abandoned_carts_settings_smart_bar_header %}
+    <template #smart-bar-header>
+        <h2>
+            {{ $tc('frosh-abandoned-carts.settings.title') }}
+        </h2>
+    </template>
+    {% endblock %}
+
+    {% block frosh_abandoned_carts_settings_smart_bar_actions %}
+    <template #smart-bar-actions>
+        <sw-button-process
+            class="frosh-abandoned-carts-settings__save-action"
+            :is-loading="isLoading"
+            :process-success="isSaveSuccessful"
+            :disabled="isLoading"
+            variant="primary"
+            @update:process-success="saveFinish"
+            @click="onSave"
+        >
+            {{ $tc('frosh-abandoned-carts.settings.buttonSave') }}
+        </sw-button-process>
+    </template>
+    {% endblock %}
+
+    {% block frosh_abandoned_carts_settings_content %}
+    <template #content>
+        <sw-card-view>
+            <sw-skeleton v-if="isLoading"/>
+            <sw-system-config
+                v-show="!isLoading"
+                ref="systemConfig"
+                domain="FroshAbandonedCart.config"
+                @loading-changed="onLoadingChanged"
+            />
+        </sw-card-view>
+    </template>
+    {% endblock %}
+</sw-page>
+{% endblock %}

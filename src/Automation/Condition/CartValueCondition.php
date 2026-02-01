@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace Frosh\AbandonedCart\Automation\Condition;
 
-use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
+use Doctrine\DBAL\Query\QueryBuilder;
+use Shopware\Core\Framework\Context;
 
 class CartValueCondition implements ConditionInterface
 {
@@ -13,29 +14,23 @@ class CartValueCondition implements ConditionInterface
         return 'cart_value';
     }
 
-    /**
-     * @param array<string, mixed> $config
-     */
-    public function evaluate(AbandonedCartEntity $cart, array $config, \Shopware\Core\Framework\Context $context): bool
+    public function apply(QueryBuilder $query, array $config, Context $context): void
     {
         $operator = $config['operator'] ?? '>=';
         $value = (float) ($config['value'] ?? 0);
 
-        $totalPrice = $cart->getTotalPrice();
-
-        return $this->compare($totalPrice, $value, $operator);
-    }
-
-    private function compare(float $actual, float $expected, string $operator): bool
-    {
-        return match ($operator) {
-            '>=', 'gte' => $actual >= $expected,
-            '<=', 'lte' => $actual <= $expected,
-            '==', 'eq' => abs($actual - $expected) < 0.001,
-            '!=', 'neq' => abs($actual - $expected) >= 0.001,
-            '>', 'gt' => $actual > $expected,
-            '<', 'lt' => $actual < $expected,
-            default => false,
+        $sqlOperator = match ($operator) {
+            '>=', 'gte' => '>=',
+            '<=', 'lte' => '<=',
+            '>', 'gt' => '>',
+            '<', 'lt' => '<',
+            '==', 'eq' => '=',
+            '!=', 'neq' => '!=',
+            default => '>=',
         };
+
+        $paramName = 'cart_value_' . uniqid();
+        $query->andWhere("cart.total_price {$sqlOperator} :{$paramName}");
+        $query->setParameter($paramName, $value);
     }
 }

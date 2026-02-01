@@ -1,11 +1,13 @@
 {
-  "base": "/bundles/froshcartarchiver/administration/",
+  "base": "/bundles/froshabandonedcart/administration/",
   "entryPoints": {
-    "frosh-cart-archiver": {
-      "css": [],
+    "frosh-abandoned-cart": {
+      "css": [
+        "/bundles/froshabandonedcart/administration/assets/frosh-abandoned-cart-CyVYEU-G.css"
+      ],
       "dynamic": [],
       "js": [
-        "/bundles/froshcartarchiver/administration/assets/frosh-cart-archiver-Dn1UO-ou.js"
+        "/bundles/froshabandonedcart/administration/assets/frosh-abandoned-cart-CK-W4K24.js"
       ],
       "legacy": false,
       "preload": []

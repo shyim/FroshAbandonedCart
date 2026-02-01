@@ -1,15 +1,17 @@
-<?php declare(strict_types=1);
+<?php
+
+declare(strict_types=1);
 
 namespace Frosh\AbandonedCart\Controller\Api;
 
+use Doctrine\DBAL\Connection;
 use Frosh\AbandonedCart\Automation\Condition\ConditionInterface;
 use Frosh\AbandonedCart\Entity\AbandonedCartCollection;
-use Frosh\AbandonedCart\Entity\AbandonedCartEntity;
 use Shopware\Core\Framework\Context;
 use Shopware\Core\Framework\DataAbstractionLayer\EntityRepository;
 use Shopware\Core\Framework\DataAbstractionLayer\Search\Criteria;
-use Shopware\Core\Framework\DataAbstractionLayer\Search\Filter\EqualsFilter;
 use Shopware\Core\Framework\Routing\ApiRouteScope;
+use Shopware\Core\Framework\Uuid\Uuid;
 use Shopware\Core\PlatformRequest;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -20,13 +22,22 @@ use Symfony\Component\Routing\Attribute\Route;
 class AbandonedCartAutomationTestController extends AbstractController
 {
     /**
+     * @var array<string, ConditionInterface>
+     */
+    private array $conditionHandlers = [];
+
+    /**
      * @param EntityRepository<AbandonedCartCollection> $abandonedCartRepository
      * @param iterable<ConditionInterface> $conditions
      */
     public function __construct(
         private readonly EntityRepository $abandonedCartRepository,
-        private readonly iterable $conditions,
+        private readonly Connection $connection,
+        iterable $conditions,
     ) {
+        foreach ($conditions as $condition) {
+            $this->conditionHandlers[$condition->getType()] = $condition;
+        }
     }
 
     #[Route(path: '/api/_action/frosh-abandoned-cart/automation/test', name: 'api.action.frosh-abandoned-cart.automation.test', methods: ['POST'])]
@@ -34,80 +45,87 @@ class AbandonedCartAutomationTestController extends AbstractController
     {
         $conditions = $request->request->all('conditions');
         $salesChannelId = $request->request->get('salesChannelId');
+        $page = max(1, (int) $request->request->get('page', 1));
+        $limit = min(100, max(1, (int) $request->request->get('limit', 25)));
+        $offset = ($page - 1) * $limit;
 
-        // Build condition handlers map
-        $conditionHandlers = [];
-        foreach ($this->conditions as $condition) {
-            $conditionHandlers[$condition->getType()] = $condition;
-        }
-
-        // Load abandoned carts with associations
-        $criteria = new Criteria();
-        $criteria->addAssociation('customer');
-        $criteria->addAssociation('salesChannel');
-        $criteria->addAssociation('lineItems');
-        $criteria->setLimit(100);
+        // Build query with SQL conditions
+        $query = $this->connection->createQueryBuilder();
+        $query->select('LOWER(HEX(cart.id)) as id')
+            ->from('frosh_abandoned_cart', 'cart')
+            ->setMaxResults($limit)
+            ->setFirstResult($offset);
 
         if ($salesChannelId) {
-            $criteria->addFilter(new EqualsFilter('salesChannelId', $salesChannelId));
+            $query->andWhere('cart.sales_channel_id = :sales_channel_id');
+            $query->setParameter('sales_channel_id', Uuid::fromHexToBytes($salesChannelId));
         }
 
-        $carts = $this->abandonedCartRepository->search($criteria, $context)->getEntities();
+        // Apply conditions
+        foreach ($conditions as $conditionConfig) {
+            $type = $conditionConfig['type'] ?? null;
 
+            if ($type === null || !isset($this->conditionHandlers[$type])) {
+                continue;
+            }
+
+            $this->conditionHandlers[$type]->apply($query, $conditionConfig, $context);
+        }
+
+        $matchingCartIds = $query->executeQuery()->fetchFirstColumn();
+
+        // Build count query with same conditions (without pagination)
+        $countQuery = $this->connection->createQueryBuilder();
+        $countQuery->select('COUNT(*)')
+            ->from('frosh_abandoned_cart', 'cart');
+
+        if ($salesChannelId) {
+            $countQuery->andWhere('cart.sales_channel_id = :sales_channel_id');
+            $countQuery->setParameter('sales_channel_id', Uuid::fromHexToBytes($salesChannelId));
+        }
+
+        foreach ($conditions as $conditionConfig) {
+            $type = $conditionConfig['type'] ?? null;
+
+            if ($type === null || !isset($this->conditionHandlers[$type])) {
+                continue;
+            }
+
+            $this->conditionHandlers[$type]->apply($countQuery, $conditionConfig, $context);
+        }
+
+        $matchingCount = (int) $countQuery->executeQuery()->fetchOne();
+
+        // Load full cart data for matching carts
         $matchingCarts = [];
-        $nonMatchingCarts = [];
+        if (!empty($matchingCartIds)) {
+            $criteria = new Criteria($matchingCartIds);
+            $criteria->addAssociation('customer');
+            $criteria->addAssociation('salesChannel');
+            $criteria->addAssociation('lineItems');
 
-        foreach ($carts as $cart) {
-            $matches = $this->evaluateConditions($cart, $conditions, $conditionHandlers, $context);
+            $carts = $this->abandonedCartRepository->search($criteria, $context)->getEntities();
 
-            $cartData = [
-                'id' => $cart->getId(),
-                'customerEmail' => $cart->getCustomer()?->getEmail(),
-                'customerName' => $cart->getCustomer() ? $cart->getCustomer()->getFirstName() . ' ' . $cart->getCustomer()->getLastName() : 'Unknown',
-                'totalPrice' => $cart->getTotalPrice(),
-                'currencyIsoCode' => $cart->getCurrencyIsoCode(),
-                'createdAt' => $cart->getCreatedAt()?->format('Y-m-d H:i:s'),
-                'automationCount' => $cart->getAutomationCount(),
-                'lineItemCount' => $cart->getLineItems()?->count() ?? 0,
-            ];
-
-            if ($matches) {
-                $matchingCarts[] = $cartData;
-            } else {
-                $nonMatchingCarts[] = $cartData;
+            foreach ($carts as $cart) {
+                $matchingCarts[] = [
+                    'id' => $cart->getId(),
+                    'customerEmail' => $cart->getCustomer()?->getEmail(),
+                    'customerName' => $cart->getCustomer() ? $cart->getCustomer()->getFirstName() . ' ' . $cart->getCustomer()->getLastName() : 'Unknown',
+                    'totalPrice' => $cart->getTotalPrice(),
+                    'currencyIsoCode' => $cart->getCurrencyIsoCode(),
+                    'createdAt' => $cart->getCreatedAt()?->format('Y-m-d H:i:s'),
+                    'automationCount' => $cart->getAutomationCount(),
+                    'lineItemCount' => $cart->getLineItems()?->count() ?? 0,
+                ];
             }
         }
 
         return new JsonResponse([
-            'matchingCount' => \count($matchingCarts),
-            'totalCount' => $carts->count(),
+            'matchingCount' => $matchingCount,
             'matchingCarts' => $matchingCarts,
-            'nonMatchingCarts' => \array_slice($nonMatchingCarts, 0, 10),
+            'page' => $page,
+            'limit' => $limit,
+            'totalPages' => (int) ceil($matchingCount / $limit),
         ]);
-    }
-
-    /**
-     * @param array<int, array<string, mixed>> $conditionConfigs
-     * @param array<string, ConditionInterface> $conditionHandlers
-     */
-    private function evaluateConditions(AbandonedCartEntity $cart, array $conditionConfigs, array $conditionHandlers, Context $context): bool
-    {
-        if (empty($conditionConfigs)) {
-            return true;
-        }
-
-        foreach ($conditionConfigs as $conditionConfig) {
-            $type = $conditionConfig['type'] ?? null;
-
-            if ($type === null || !isset($conditionHandlers[$type])) {
-                return false;
-            }
-
-            if (!$conditionHandlers[$type]->evaluate($cart, $conditionConfig, $context)) {
-                return false;
-            }
-        }
-
-        return true;
     }
 }

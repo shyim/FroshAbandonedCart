@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/shopware/platform/trunk/src/Core/System/SystemConfig/Schema/config.xsd">
+    <card>
+        <title>Cart Conversion</title>
+        <title lang="de-DE">Warenkorb-Konvertierung</title>
+
+        <input-field type="int">
+            <name>cartAbandonmentThreshold</name>
+            <label>Cart abandonment threshold (minutes)</label>
+            <label lang="de-DE">Warenkorbabbruch-Schwelle (Minuten)</label>
+            <placeholder>Enter time in minutes...</placeholder>
+            <placeholder lang="de-DE">Zeit in Minuten eingeben...</placeholder>
+            <helpText>A cart is considered abandoned after this many minutes of inactivity. Default: 120 minutes (2 hours).</helpText>
+            <helpText lang="de-DE">Ein Warenkorb gilt als abgebrochen nach dieser Anzahl von Minuten ohne Aktivität. Standard: 120 Minuten (2 Stunden).</helpText>
+            <defaultValue>120</defaultValue>
+        </input-field>
+    </card>
+
+    <card>
+        <title>Data Retention</title>
+        <title lang="de-DE">Datenspeicherung</title>
+
+        <input-field type="int">
+            <name>retentionDays</name>
+            <label>Retention period (days)</label>
+            <label lang="de-DE">Aufbewahrungszeitraum (Tage)</label>
+            <placeholder>Enter days...</placeholder>
+            <placeholder lang="de-DE">Tage eingeben...</placeholder>
+            <helpText>Abandoned carts older than this will be automatically deleted. Set to 0 to disable automatic deletion. Default: 14 days.</helpText>
+            <helpText lang="de-DE">Abgebrochene Warenkörbe, die älter sind, werden automatisch gelöscht. Auf 0 setzen, um die automatische Löschung zu deaktivieren. Standard: 14 Tage.</helpText>
+            <defaultValue>14</defaultValue>
+        </input-field>
+    </card>
+</config>
